@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
     { paranoid: true, freezeTableName: true }
   );
   model.associate = (models) => {
-    model.hasMany(models.itsdata, {
+    model.hasMany(models.itsdataupload, {
       as: "familyMembers",
       foreignKey: "HOF_ID",
       sourceKey: "ITS_ID",
