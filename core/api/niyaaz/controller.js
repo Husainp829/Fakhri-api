@@ -106,11 +106,13 @@ async function insert(req, res) {
       paidAmount,
       mode,
       details,
+      formNo,
+      submitter,
     } = body;
     const { currentValue, prefix } =
       (await baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.NIYAAZ)) || {};
     const result = await sequelize.transaction(async (t) => {
-      const formN = `${prefix}-${markaz}-${currentValue + 1}`;
+      const formN = formNo || `${prefix}-${markaz}-${currentValue + 1}`;
       const niyaazData = await baseRepo.insert(
         ep,
         {
@@ -126,7 +128,7 @@ async function insert(req, res) {
           formNo: formN,
           iftaari,
           chairs,
-          submitter: userId,
+          submitter: submitter || userId,
           comments,
         },
         t
