@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const baseRepo = require("../base/repo");
 const constants = require("../../const/constants");
 const { sequelize } = require("../../../models");
@@ -13,10 +14,37 @@ const include = [
   },
 ];
 
+const includeFind = [
+  {
+    model: models.admins,
+    as: "admin",
+  },
+  {
+    model: models.events,
+    as: "event",
+  },
+];
+
 async function findAll(req, res) {
   const { query, decoded } = req;
   query.include = include;
-  query.eventId = decoded.eventId;
+  if (decoded.eventId) {
+    query.eventId = decoded.eventId;
+  }
+  if (query.search) {
+    query.HOFId = query.search;
+    delete query.search;
+  }
+  if (query.includeEventData) {
+    query.include = [
+      ...query.include,
+      {
+        model: models.events,
+        as: "event",
+      },
+    ];
+    delete query.includeEventData;
+  }
   baseRepo
     .findAll(ep, query)
     .then((response) => {
@@ -28,9 +56,27 @@ async function findAll(req, res) {
 async function findById(req, res) {
   let code;
   try {
-    const data = await baseRepo.findById(ep, "id", req.params.id, include);
+    const data = await baseRepo.findById(ep, "id", req.params.id, includeFind);
     if (data.count) {
-      sendResponse(res, data, constants.HTTP_STATUS_CODES.OK);
+      const row = data.rows[0];
+      const hofId = row.HOFId;
+      const currEventId = row.eventId;
+      const allPreviousNiyaaz = await baseRepo.findAll(ep, {
+        where: {
+          hofId,
+          eventId: { [Op.ne]: currEventId },
+        },
+        include: [
+          {
+            model: models.events,
+            as: "event",
+          },
+        ],
+      });
+      if (allPreviousNiyaaz.count) {
+        row.previousNiyaazHistory = allPreviousNiyaaz.rows;
+      }
+      sendResponse(res, { count: data.count, rows: [row] }, constants.HTTP_STATUS_CODES.OK);
     } else {
       code = constants.HTTP_STATUS_CODES.NOT_FOUND;
       throwError("Does not exist", true);

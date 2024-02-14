@@ -1,9 +1,28 @@
 const baseRepo = require("../base/repo");
 const constants = require("../../const/constants");
+const { sequelize } = require("../../../models");
 const meta = require("./meta");
+const models = require("../../../models");
 
 const ep = meta.ENDPOINT;
-const include = [];
+const niyaaz = "niyaaz";
+const include = [
+  {
+    model: models.admins,
+    as: "admin",
+  },
+];
+
+const includeFind = [
+  {
+    model: models.admins,
+    as: "admin",
+  },
+  {
+    model: models.events,
+    as: "event",
+  },
+];
 
 async function findAll(req, res) {
   const { query, decoded } = req;
@@ -20,7 +39,7 @@ async function findAll(req, res) {
 async function findById(req, res) {
   let code;
   try {
-    const data = await baseRepo.findById(ep, "id", req.params.id, include);
+    const data = await baseRepo.findById(ep, "id", req.params.id, includeFind);
     if (data.count) {
       sendResponse(res, data, constants.HTTP_STATUS_CODES.OK);
     } else {
@@ -32,19 +51,44 @@ async function findById(req, res) {
   }
 }
 
-function insert(req, res) {
+async function insert(req, res) {
   const { body, decoded } = req;
-  const params = body;
   const { userId, eventId } = decoded;
 
-  baseRepo
-    .insert(ep, { createdBy: userId, eventId, ...params })
-    .then((response) => {
-      sendResponse(res, response, constants.HTTP_STATUS_CODES.CREATED);
-    })
-    .catch((err) => {
-      sendError(res, err, constants.HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
+  try {
+    const { niyaazId, formNo, HOFId, HOFName, amount, mode, details, markaz } = body;
+    const { currentValue, prefix } =
+      (await baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.RECEIPT_NIYAAZ)) || {};
+    const result = await sequelize.transaction(async (t) => {
+      const receiptN = `${prefix}-${markaz}-${currentValue + 1}`;
+      const receiptData = await baseRepo.insert(
+        ep,
+        {
+          receiptNo: receiptN,
+          eventId,
+          formNo,
+          niyaazId,
+          markaz,
+          HOFId,
+          HOFName,
+          date: new Date(),
+          amount,
+          mode,
+          total: amount,
+          createdBy: userId,
+          details,
+        },
+        t
+      );
+      await baseRepo.appendAmount(niyaaz, niyaazId, { paidAmount: amount }, t);
+      await baseRepo.updateSequence(constants.SEQUENCE_NAMES.RECEIPT_NIYAAZ, t);
+      // update in sequence
+      return receiptData;
     });
+    sendResponse(res, result, constants.HTTP_STATUS_CODES.CREATED);
+  } catch (error) {
+    sendError(res, error, constants.HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
+  }
 }
 
 async function update(req, res) {

@@ -19,6 +19,7 @@ module.exports = (sq, type) => {
       details: type.STRING,
       markaz: type.STRING,
       total: type.INTEGER,
+      createdBy: type.STRING,
       receiptNo: type.STRING,
       createdAt: type.DATE,
       updatedAt: type.DATE,
@@ -31,6 +32,8 @@ module.exports = (sq, type) => {
   );
   model.associate = (models) => {
     model.belongsTo(models.events);
+    model.belongsTo(models.niyaaz);
+    model.hasOne(models.admins, { as: "admin", foreignKey: "id", sourceKey: "createdBy" });
   };
 
   return model;
