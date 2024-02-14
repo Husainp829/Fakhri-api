@@ -9,7 +9,7 @@ const meta = require("./meta");
 const ep = meta.ENDPOINT;
 const includeParams = [
   {
-    model: models.itsdata,
+    model: models.itsdataupload,
     as: "familyMembers",
   },
 ];
