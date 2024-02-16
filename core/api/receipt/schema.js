@@ -16,7 +16,7 @@ const body = {
   markaz: markaz.required(),
   HOFId: HOFId.required(),
   HOFName: HOFName.required(),
-  amount: amount.required(),
+  amount: amount.min(0).required(),
   mode: mode.required(),
   details,
 };
