@@ -80,7 +80,7 @@ async function insert(req, res) {
         },
         t
       );
-      await baseRepo.appendAmount(niyaaz, niyaazId, { paidAmount: amount }, t);
+      await baseRepo.appendAmount(niyaaz, niyaazId, { paidAmount: parseInt(amount, 10) }, t);
       await baseRepo.updateSequence(constants.SEQUENCE_NAMES.RECEIPT_NIYAAZ, t);
       // update in sequence
       return receiptData;

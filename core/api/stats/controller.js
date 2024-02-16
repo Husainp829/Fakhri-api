@@ -9,9 +9,13 @@ async function getEventStats(req, res) {
     query.include = include;
 
     const niyaazCounts = await repo.getNiyaazCounts(decoded).then((response) => response);
+    const dayWiseReceiptReport = await repo
+      .getDayWiseReceiptReport(decoded)
+      .then((response) => response);
 
     const data = {
       niyaazCounts,
+      dayWiseReceiptReport,
     };
 
     sendResponse(res, data, constants.HTTP_STATUS_CODES.OK);

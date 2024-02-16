@@ -18,11 +18,11 @@ const paidAmount = joi.number().allow(null, "");
 const submitter = joi.string().allow(null, "");
 
 const body = {
-  markaz,
-  HOFId,
-  HOFName,
+  markaz: markaz.required(),
+  HOFId: HOFId.required(),
+  HOFName: HOFName.required(),
   HOFAddress,
-  HOFPhone,
+  HOFPhone: HOFPhone.required(),
   familyMembers,
   takhmeenAmount,
   zabihat,
@@ -37,11 +37,11 @@ const body = {
 };
 
 const updateBody = {
-  markaz,
-  HOFId,
-  HOFName,
+  markaz: markaz.required(),
+  HOFId: HOFId.required(),
+  HOFName: HOFName.required(),
   HOFAddress,
-  HOFPhone,
+  HOFPhone: HOFPhone.required(),
   familyMembers,
   takhmeenAmount,
   zabihat,

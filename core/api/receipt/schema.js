@@ -11,14 +11,14 @@ const markaz = joi.string().allow(null, "");
 const niyaazId = joi.string();
 
 const body = {
-  niyaazId,
-  formNo,
-  HOFId,
-  HOFName,
-  amount,
-  mode,
+  niyaazId: niyaazId.required(),
+  formNo: formNo.required(),
+  markaz: markaz.required(),
+  HOFId: HOFId.required(),
+  HOFName: HOFName.required(),
+  amount: amount.required(),
+  mode: mode.required(),
   details,
-  markaz,
 };
 
 const insert = joi.object(body);
