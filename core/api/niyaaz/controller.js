@@ -4,6 +4,7 @@ const constants = require("../../const/constants");
 const { sequelize } = require("../../../models");
 const meta = require("./meta");
 const models = require("../../../models");
+const { getGentsLadiesCount } = require("../../utils/helper");
 
 const ep = meta.ENDPOINT;
 const receipt = "receipts";
@@ -113,6 +114,7 @@ async function insert(req, res) {
       (await baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.NIYAAZ)) || {};
     const result = await sequelize.transaction(async (t) => {
       const formN = formNo || `${prefix}-${markaz}-${currentValue + 1}`;
+      const { gentsCount, ladiesCount } = getGentsLadiesCount(familyMembers);
       const niyaazData = await baseRepo.insert(
         ep,
         {
@@ -128,6 +130,8 @@ async function insert(req, res) {
           formNo: formN,
           iftaari,
           chairs,
+          gentsCount,
+          ladiesCount,
           submitter: submitter || userId,
           comments,
         },
@@ -186,7 +190,13 @@ async function update(req, res) {
   let code;
   const { body } = req;
   try {
-    const response = await baseRepo.update(ep, req.params.id, body);
+    const { gentsCount, ladiesCount } = getGentsLadiesCount(body.familyMembers);
+    const bodyParams = {
+      ...body,
+      gentsCount,
+      ladiesCount,
+    };
+    const response = await baseRepo.update(ep, req.params.id, bodyParams);
     if (response && response.count > 0) {
       sendResponse(res, response, constants.HTTP_STATUS_CODES.CREATED);
     } else {

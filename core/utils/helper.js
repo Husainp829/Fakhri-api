@@ -69,4 +69,17 @@ const constructMailConfig = (mailInfo, toArray) => {
   };
 };
 
-module.exports = { uploadImage, constructMailConfig };
+const getGentsLadiesCount = (familyMembers) => {
+  let gentsCount = 0;
+  let ladiesCount = 0;
+  familyMembers.forEach((f) => {
+    if (f.gender === "Male") {
+      gentsCount += 1;
+    } else {
+      ladiesCount += 1;
+    }
+  });
+  return { gentsCount, ladiesCount };
+};
+
+module.exports = { uploadImage, constructMailConfig, getGentsLadiesCount };

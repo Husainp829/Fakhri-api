@@ -12,7 +12,9 @@ function getNiyaazCounts(decoded) {
       SUM(chairs) as chairs,
       SUM(iftaari) as iftaari,
       SUM(zabihat) as zabihat,
-      SUM(paidAmount) as paidAmount
+      SUM(paidAmount) as paidAmount,
+      SUM(gentsCount) as gentsCount,
+      SUM(ladiesCount) as ladiesCount
     FROM niyaaz
     WHERE (
       deletedAt IS NULL 

@@ -18,6 +18,8 @@ module.exports = {
       zabihat: { type: Sequelize.INTEGER },
       iftaari: { type: Sequelize.INTEGER },
       chairs: { type: Sequelize.INTEGER },
+      gentsCount: { type: Sequelize.INTEGER },
+      ladiesCount: { type: Sequelize.INTEGER },
       comments: { type: Sequelize.STRING },
       formNo: { type: Sequelize.STRING },
       paidAmount: { type: Sequelize.INTEGER },

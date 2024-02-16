@@ -1,10 +1,10 @@
 const joi = require("joi");
 
-const markaz = joi.string().allow(null, "");
+const markaz = joi.string();
 const HOFId = joi.number();
-const HOFName = joi.string().allow(null, "");
+const HOFName = joi.string();
 const HOFAddress = joi.string().allow(null, "");
-const HOFPhone = joi.any().allow(null, "");
+const HOFPhone = joi.any();
 const familyMembers = joi.any();
 const takhmeenAmount = joi.number();
 const zabihat = joi.number();

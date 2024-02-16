@@ -20,6 +20,8 @@ module.exports = (sq, type) => {
       zabihat: type.INTEGER,
       iftaari: type.INTEGER,
       chairs: type.INTEGER,
+      gentsCount: type.INTEGER,
+      ladiesCount: type.INTEGER,
       comments: type.STRING,
       formNo: type.STRING,
       paidAmount: type.INTEGER,
