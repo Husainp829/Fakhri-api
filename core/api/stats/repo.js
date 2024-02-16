@@ -38,6 +38,7 @@ function getDayWiseReceiptReport(decoded) {
   return models.sequelize.query(
     `
     SELECT  Date(date) AS day,
+            markaz,
             mode,
             Sum(amount) AS total_amount
     FROM    receipts
@@ -47,8 +48,8 @@ function getDayWiseReceiptReport(decoded) {
           eventId = '${eventId}'
         )
     )
-    GROUP BY day, mode
-    ORDER BY day, mode
+    GROUP BY markaz, day, mode
+    ORDER BY markaz, day, mode
   `,
     {
       replacements: {
