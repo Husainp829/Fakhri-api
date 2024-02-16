@@ -126,6 +126,7 @@ async function insert(req, res) {
           HOFPhone,
           familyMembers,
           takhmeenAmount,
+          paidAmount,
           zabihat,
           formNo: formN,
           iftaari,
