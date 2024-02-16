@@ -60,7 +60,7 @@ async function insert(req, res) {
     const { currentValue, prefix } =
       (await baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.RECEIPT_NIYAAZ)) || {};
     const result = await sequelize.transaction(async (t) => {
-      const receiptN = `${prefix}-${markaz}-${currentValue + 1}`;
+      const receiptN = `${prefix}-${currentValue + 1}`;
       const receiptData = await baseRepo.insert(
         ep,
         {

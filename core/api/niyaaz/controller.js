@@ -110,8 +110,8 @@ async function insert(req, res) {
       formNo,
       submitter,
     } = body;
-    const { currentValue, prefix } =
-      (await baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.NIYAAZ)) || {};
+    const sequenceName = `${constants.SEQUENCE_NAMES.NIYAAZ}_${markaz}`;
+    const { currentValue, prefix } = (await baseRepo.getCurrentSequence(sequenceName)) || {};
     const result = await sequelize.transaction(async (t) => {
       const formN = formNo || `${prefix}-${markaz}-${currentValue + 1}`;
       const { gentsCount, ladiesCount } = getGentsLadiesCount(familyMembers);
@@ -168,7 +168,7 @@ async function insert(req, res) {
       }
 
       // update in sequence
-      await baseRepo.updateSequence(constants.SEQUENCE_NAMES.NIYAAZ, t);
+      await baseRepo.updateSequence(sequenceName, t);
       return niyaazData;
     });
     sendResponse(res, result, constants.HTTP_STATUS_CODES.CREATED);
