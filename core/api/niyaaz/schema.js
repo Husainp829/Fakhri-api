@@ -5,7 +5,6 @@ const HOFId = joi.number();
 const HOFName = joi.string();
 const HOFAddress = joi.string().allow(null, "");
 const HOFPhone = joi.any();
-const familyMembers = joi.any();
 const takhmeenAmount = joi.number();
 const zabihat = joi.number();
 const iftaari = joi.number();
@@ -16,6 +15,17 @@ const mode = joi.string().allow(null, "");
 const formNo = joi.string().allow(null, "");
 const paidAmount = joi.number().allow(null, "");
 const submitter = joi.string().allow(null, "");
+
+const familyMembers = joi
+  .array()
+  .items({
+    name: joi.string().required(),
+    age: joi.string().required(),
+    gender: joi.string().required(),
+    its: joi.string().required(),
+  })
+  .min(1)
+  .required();
 
 const body = {
   markaz: markaz.required(),
