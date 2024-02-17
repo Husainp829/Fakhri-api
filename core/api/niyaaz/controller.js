@@ -1,5 +1,4 @@
 const { Op } = require("sequelize");
-const Sequelize = require("sequelize");
 const baseRepo = require("../base/repo");
 const constants = require("../../const/constants");
 const { sequelize } = require("../../../models");
