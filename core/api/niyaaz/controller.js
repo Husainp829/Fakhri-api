@@ -40,6 +40,19 @@ async function findAll(req, res) {
     };
     delete query.search;
   }
+  if (query.markaz) {
+    query.where = {
+      ...query.where,
+      markaz: { [Op.eq]: query.markaz },
+    };
+    delete query.markaz;
+  }
+  if (decoded.eventId) {
+    query.where = {
+      ...query.where,
+      eventId: { [Op.eq]: decoded.eventId },
+    };
+  }
   if (query.includeEventData) {
     query.include = [
       ...query.include,
@@ -50,10 +63,7 @@ async function findAll(req, res) {
     ];
     delete query.includeEventData;
   }
-  console.log({ decoded });
-  if (decoded.eventId) {
-    query.eventId = decoded.eventId;
-  }
+
   baseRepo
     .findAll(ep, query)
     .then((response) => {
