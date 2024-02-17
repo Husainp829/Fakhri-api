@@ -30,9 +30,6 @@ const includeFind = [
 async function findAll(req, res) {
   const { query, decoded } = req;
   query.include = include;
-  if (decoded.eventId) {
-    query.eventId = decoded.eventId;
-  }
   if (query.search) {
     query.where = {
       [Op.or]: [
@@ -43,7 +40,6 @@ async function findAll(req, res) {
     };
     delete query.search;
   }
-
   if (query.includeEventData) {
     query.include = [
       ...query.include,
@@ -53,6 +49,10 @@ async function findAll(req, res) {
       },
     ];
     delete query.includeEventData;
+  }
+  console.log({ decoded });
+  if (decoded.eventId) {
+    query.eventId = decoded.eventId;
   }
   baseRepo
     .findAll(ep, query)
