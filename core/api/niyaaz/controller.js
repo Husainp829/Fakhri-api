@@ -1,4 +1,5 @@
 const { Op } = require("sequelize");
+const Sequelize = require("sequelize");
 const baseRepo = require("../base/repo");
 const constants = require("../../const/constants");
 const { sequelize } = require("../../../models");
@@ -33,9 +34,16 @@ async function findAll(req, res) {
     query.eventId = decoded.eventId;
   }
   if (query.search) {
-    query.HOFId = query.search;
+    query.where = {
+      [Op.or]: [
+        { HOFId: { [Op.like]: `%${query.search}%` } },
+        { HOFName: { [Op.like]: `%${query.search}%` } },
+        { formNo: { [Op.like]: `%${query.search}%` } },
+      ],
+    };
     delete query.search;
   }
+
   if (query.includeEventData) {
     query.include = [
       ...query.include,
