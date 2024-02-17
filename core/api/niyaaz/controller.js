@@ -178,6 +178,7 @@ async function insert(req, res) {
             amount: paidAmount,
             markaz,
             total: paidAmount,
+            createdBy: userId,
           },
           t
         );
