@@ -187,9 +187,9 @@ async function insert(req, res) {
 
       // update in sequence
       await baseRepo.updateSequence(sequenceName, t);
-      return niyaazData;
+      return formN;
     });
-    sendResponse(res, result, constants.HTTP_STATUS_CODES.CREATED);
+    sendResponse(res, { count: 1, rows: [{ id: result }] }, constants.HTTP_STATUS_CODES.CREATED);
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
       sendError(
