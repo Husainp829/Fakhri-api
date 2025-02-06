@@ -9,6 +9,7 @@ module.exports = {
         autoIncrement: false,
       },
       markaz: { type: Sequelize.STRING },
+      namaazVenue: { type: Sequelize.STRING },
       HOFId: { type: Sequelize.STRING },
       HOFName: { type: Sequelize.STRING },
       HOFAddress: { type: Sequelize.STRING },

@@ -9,7 +9,7 @@ const meta = require("./meta");
 const ep = meta.ENDPOINT;
 const includeParams = [
   {
-    model: models.itsdataupload,
+    model: models.itsdata,
     as: "familyMembers",
   },
 ];
@@ -76,7 +76,7 @@ async function upload(req, res) {
       ignoreEmptyRows: false,
     }).then((row) => row);
     const transaction = await sequelize.transaction();
-    const result = await models.itsdataupload.bulkCreate(
+    const result = await models.itsdata.bulkCreate(
       data?.rows.map((row) => ({ id: row.ITS_ID, ...row })),
       { raw: true, transaction }
     );

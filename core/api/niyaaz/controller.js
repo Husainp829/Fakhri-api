@@ -46,6 +46,13 @@ async function findAll(req, res) {
     };
     delete query.markaz;
   }
+  if (query.namaazVenue) {
+    query.where = {
+      ...query.where,
+      namaazVenue: { [Op.eq]: query.namaazVenue },
+    };
+    delete query.namaazVenue;
+  }
   if (decoded.eventId) {
     query.where = {
       ...query.where,
@@ -111,6 +118,7 @@ async function insert(req, res) {
   try {
     const {
       markaz,
+      namaazVenue,
       HOFId,
       HOFName,
       HOFAddress,
@@ -137,6 +145,7 @@ async function insert(req, res) {
         {
           eventId,
           markaz,
+          namaazVenue,
           HOFId,
           HOFName,
           HOFAddress,
@@ -177,6 +186,7 @@ async function insert(req, res) {
             details,
             amount: paidAmount,
             markaz,
+            namaazVenue,
             total: paidAmount,
             createdBy: userId,
           },

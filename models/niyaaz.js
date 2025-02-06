@@ -11,6 +11,7 @@ module.exports = (sq, type) => {
         autoIncrement: false,
       },
       markaz: type.STRING,
+      namaazVenue: type.STRING,
       HOFId: type.STRING,
       HOFName: type.STRING,
       HOFAddress: type.STRING,

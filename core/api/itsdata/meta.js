@@ -1,3 +1,3 @@
 module.exports = {
-  ENDPOINT: "itsdataupload",
+  ENDPOINT: "itsdata",
 };

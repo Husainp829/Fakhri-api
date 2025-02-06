@@ -7,6 +7,7 @@ const amount = joi.number();
 const mode = joi.string().allow(null, "");
 const details = joi.string().allow(null, "");
 const markaz = joi.string().allow(null, "");
+const namaazVenue = joi.string().allow(null, "");
 
 const niyaazId = joi.string();
 
@@ -14,6 +15,7 @@ const body = {
   niyaazId: niyaazId.required(),
   formNo: formNo.required(),
   markaz: markaz.required(),
+  namaazVenue: namaazVenue.required(),
   HOFId: HOFId.required(),
   HOFName: HOFName.required(),
   amount: amount.min(1).required(),

@@ -16,6 +16,7 @@ module.exports = {
       mode: { type: Sequelize.STRING },
       details: { type: Sequelize.STRING },
       markaz: { type: Sequelize.STRING },
+      namaazVenue: { type: Sequelize.STRING },
       total: { type: Sequelize.INTEGER },
       receiptNo: { type: Sequelize.STRING },
       createdAt: {

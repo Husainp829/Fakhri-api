@@ -56,7 +56,7 @@ async function insert(req, res) {
   const { userId, eventId } = decoded;
 
   try {
-    const { niyaazId, formNo, HOFId, HOFName, amount, mode, details, markaz } = body;
+    const { niyaazId, formNo, HOFId, HOFName, amount, mode, details, markaz, namaazVenue } = body;
     const { currentValue, prefix } =
       (await baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.RECEIPT_NIYAAZ)) || {};
     const result = await sequelize.transaction(async (t) => {
@@ -69,6 +69,7 @@ async function insert(req, res) {
           formNo,
           niyaazId,
           markaz,
+          namaazVenue,
           HOFId,
           HOFName,
           date: new Date(),

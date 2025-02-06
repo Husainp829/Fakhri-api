@@ -18,6 +18,7 @@ module.exports = (sq, type) => {
       mode: type.STRING,
       details: type.STRING,
       markaz: type.STRING,
+      namaazVenue: type.STRING,
       total: type.INTEGER,
       createdBy: type.STRING,
       receiptNo: type.STRING,

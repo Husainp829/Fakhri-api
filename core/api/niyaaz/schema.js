@@ -1,6 +1,7 @@
 const joi = require("joi");
 
 const markaz = joi.string();
+const namaazVenue = joi.string();
 const HOFId = joi.number();
 const HOFName = joi.string();
 const HOFAddress = joi.string().allow(null, "");
@@ -29,6 +30,7 @@ const familyMembers = joi
 
 const body = {
   markaz: markaz.required(),
+  namaazVenue: namaazVenue.required(),
   HOFId: HOFId.required(),
   HOFName: HOFName.required(),
   HOFAddress,
@@ -48,6 +50,7 @@ const body = {
 
 const updateBody = {
   markaz: markaz.required(),
+  namaazVenue: namaazVenue.required(),
   HOFId: HOFId.required(),
   HOFName: HOFName.required(),
   HOFAddress,
