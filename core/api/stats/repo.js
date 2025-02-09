@@ -33,6 +33,33 @@ function getNiyaazCounts(decoded) {
   );
 }
 
+function getNamaazVenueCounts(decoded) {
+  const { eventId } = decoded;
+  return models.sequelize.query(
+    `
+    SELECT
+      namaazVenue,
+      COUNT(*) as count,
+      SUM(gentsCount) as gentsCount,
+      SUM(ladiesCount) as ladiesCount
+    FROM niyaaz
+    WHERE (
+      deletedAt IS NULL 
+      AND (
+        eventId = '${eventId}'
+      )
+    )
+    GROUP BY namaazVenue
+  `,
+    {
+      replacements: {
+        eventId,
+      },
+      type: Sequelize.QueryTypes.SELECT,
+    }
+  );
+}
+
 function getDayWiseReceiptReport(decoded) {
   const { eventId } = decoded;
   return models.sequelize.query(
@@ -62,5 +89,6 @@ function getDayWiseReceiptReport(decoded) {
 
 module.exports = {
   getNiyaazCounts,
+  getNamaazVenueCounts,
   getDayWiseReceiptReport,
 };

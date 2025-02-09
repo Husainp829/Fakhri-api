@@ -9,12 +9,14 @@ async function getEventStats(req, res) {
     query.include = include;
 
     const niyaazCounts = await repo.getNiyaazCounts(decoded).then((response) => response);
+    const namaazVenueCounts = await repo.getNamaazVenueCounts(decoded).then((response) => response);
     const dayWiseReceiptReport = await repo
       .getDayWiseReceiptReport(decoded)
       .then((response) => response);
 
     const data = {
       niyaazCounts,
+      namaazVenueCounts,
       dayWiseReceiptReport,
     };
 
