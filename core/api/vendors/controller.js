@@ -15,6 +15,16 @@ const include = [
 async function findAll(req, res) {
   const { query } = req;
   query.include = include;
+
+  if (query.q) {
+    query.where = {
+      [Op.or]: [
+        { name: { [Op.like]: `%${query.q}%` } },
+        { mobile: { [Op.like]: `%${query.q}%` } },
+      ],
+    };
+    delete query.q;
+  }
   if (query.search) {
     query.where = {
       [Op.or]: [

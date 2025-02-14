@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const baseRepo = require("../base/repo");
 const constants = require("../../const/constants");
 const meta = require("./meta");
@@ -6,7 +7,12 @@ const ep = meta.ENDPOINT;
 
 async function findAll(req, res) {
   const { query } = req;
-
+  if (query.q) {
+    query.where = {
+      id: { [Op.like]: `%${query.q}%` },
+    };
+    delete query.q;
+  }
   baseRepo
     .findAll(ep, query)
     .then((response) => {
