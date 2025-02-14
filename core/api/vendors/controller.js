@@ -20,7 +20,6 @@ async function findAll(req, res) {
       [Op.or]: [
         { name: { [Op.like]: `%${query.search}%` } },
         { mobile: { [Op.like]: `%${query.search}%` } },
-        { type: { [Op.like]: `%${query.search}%` } },
       ],
     };
     delete query.search;
@@ -54,11 +53,10 @@ async function insert(req, res) {
   const { userId } = decoded;
 
   try {
-    const { name, type, mobile } = body;
+    const { name, mobile } = body;
 
     const result = await baseRepo.insert(ep, {
       name,
-      type,
       mobile,
       updatedBy: userId,
     });

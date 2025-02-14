@@ -11,7 +11,6 @@ module.exports = (sq, type) => {
         autoIncrement: false,
       },
       name: type.STRING,
-      type: type.INTEGER,
       mobile: type.INTEGER,
       updatedBy: type.STRING,
       createdAt: type.DATE,
