@@ -27,5 +27,8 @@ router.use("/fmbTakhmeen", require("../api/fmbTakhmeen/routes"));
 router.use("/mohallas", require("../api/mohallas/routes"));
 router.use("/lagatTypes", require("../api/lagatTypes/routes"));
 router.use("/stats", require("../api/stats/routes"));
+router.use("/vendorTypes", require("../api/vendorTypes/routes"));
+router.use("/vendors", require("../api/vendors/routes"));
+router.use("/vendorLedger", require("../api/vendorLedger/routes"));
 
 module.exports = router;
