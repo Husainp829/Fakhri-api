@@ -10,6 +10,10 @@ const include = [
     model: models.admins,
     as: "admin",
   },
+  {
+    model: models.vendors,
+    as: "vendor",
+  },
 ];
 
 async function findAll(req, res) {
