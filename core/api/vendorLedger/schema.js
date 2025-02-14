@@ -5,7 +5,7 @@ const vendorId = joi.string();
 const paid = joi.number();
 const date = joi.any();
 const mode = joi.string();
-const remarks = joi.string();
+const remarks = joi.string().allow(null, "");
 
 const body = {
   vendorId: vendorId.required(),
