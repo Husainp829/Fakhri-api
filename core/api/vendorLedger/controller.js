@@ -61,18 +61,26 @@ async function insert(req, res) {
   const { userId, eventId } = decoded;
 
   try {
-    const { vendorId, type, paid, mode, date, remarks } = body;
+    const { vendorId, type, paid, mode, paidDate, billDate, billNo, remarks } = body;
+
+    const { currentValue: receiptVal, prefix: receiptPrefix } =
+      (await baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.LEDGER)) || {};
+    const ledgerN = `${receiptPrefix}-${receiptVal + 1}`;
 
     const result = await baseRepo.insert(ep, {
+      ledgerNo: ledgerN,
       vendorId,
       eventId,
       type,
       paid,
       mode,
-      date,
+      paidDate,
+      billDate,
+      billNo,
       remarks,
       updatedBy: userId,
     });
+    await baseRepo.updateSequence(constants.SEQUENCE_NAMES.LEDGER);
 
     sendResponse(res, result, constants.HTTP_STATUS_CODES.CREATED);
   } catch (error) {

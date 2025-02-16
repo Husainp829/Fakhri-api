@@ -18,10 +18,7 @@ async function findAll(req, res) {
 
   if (query.q) {
     query.where = {
-      [Op.or]: [
-        { name: { [Op.like]: `%${query.q}%` } },
-        { mobile: { [Op.like]: `%${query.q}%` } },
-      ],
+      [Op.or]: [{ name: { [Op.like]: `%${query.q}%` } }, { mobile: { [Op.like]: `%${query.q}%` } }],
     };
     delete query.q;
   }

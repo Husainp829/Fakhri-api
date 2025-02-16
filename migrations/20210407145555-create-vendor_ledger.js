@@ -20,9 +20,17 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER,
       },
-      date: {
+      paidDate: {
         allowNull: false,
         type: Sequelize.DATE,
+      },
+      billDate: {
+        allowNull: false,
+        type: Sequelize.DATE,
+      },
+      billNo: {
+        allowNull: false,
+        type: Sequelize.STRING,
       },
       mode: {
         allowNull: false,

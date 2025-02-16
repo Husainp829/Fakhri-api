@@ -56,5 +56,6 @@ module.exports = {
     RECEIPT_SABIL: "RECEIPT_SABIL",
     RECEIPT_FMB: "RECEIPT_FMB",
     FMB: "FMB",
+    LEDGER: "LEDGER",
   },
 };
