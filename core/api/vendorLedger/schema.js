@@ -4,18 +4,18 @@ const type = joi.string();
 const vendorId = joi.string();
 const paid = joi.number().allow(null, "");
 const paidDate = joi.any().allow(null, "");
-const billDate = joi.any().allow(null, "");
+const mode = joi.string().allow(null, "");
+const billDate = joi.any();
 const billNo = joi.string();
-const mode = joi.string();
 const remarks = joi.string().allow(null, "");
 
 const body = {
   vendorId: vendorId.required(),
   type: type.required(),
   paid,
-  mode: mode.required(),
   paidDate,
-  billDate,
+  mode,
+  billDate: billDate.required(),
   billNo: billNo.required(),
   remarks,
 };
