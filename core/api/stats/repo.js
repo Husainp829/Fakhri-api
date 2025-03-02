@@ -87,8 +87,45 @@ function getDayWiseReceiptReport(decoded) {
   );
 }
 
+function getMarkazWiseList({ eventId, markaz }) {
+  return models.sequelize.query(
+    `
+    SELECT 
+        fm.name,
+        fm.its AS ITS_ID,
+        CASE 
+            WHEN COALESCE(i.mobile, m.HOFPhone) LIKE '+91%' 
+                THEN SUBSTRING(COALESCE(i.mobile, m.HOFPhone), 4)
+            WHEN COALESCE(i.mobile, m.HOFPhone) LIKE '91%' 
+                THEN SUBSTRING(COALESCE(i.mobile, m.HOFPhone), 3)
+            ELSE COALESCE(i.mobile, m.HOFPhone)
+        END AS phone
+    FROM fakhri.niyaaz m
+    JOIN JSON_TABLE(
+        m.familyMembers, 
+        '$[*]' 
+        COLUMNS (
+            name VARCHAR(255) PATH '$.name',
+            its VARCHAR(20) PATH '$.its'
+        )
+    ) AS fm
+    LEFT JOIN fakhri.itsdata i ON fm.its = i.ITS_ID 
+    WHERE m.eventId = '${eventId}' 
+    AND markaz = '${markaz}';
+  `,
+    {
+      replacements: {
+        eventId,
+        markaz,
+      },
+      type: Sequelize.QueryTypes.SELECT,
+    }
+  );
+}
+
 module.exports = {
   getNiyaazCounts,
   getNamaazVenueCounts,
   getDayWiseReceiptReport,
+  getMarkazWiseList,
 };

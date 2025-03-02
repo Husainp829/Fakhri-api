@@ -2,9 +2,9 @@ const joi = require("joi");
 
 const type = joi.string();
 const vendorId = joi.string();
-const paid = joi.number();
-const paidDate = joi.any();
-const billDate = joi.any();
+const paid = joi.number().allow(null, "");
+const paidDate = joi.any().allow(null, "");
+const billDate = joi.any().allow(null, "");
 const billNo = joi.string();
 const mode = joi.string();
 const remarks = joi.string().allow(null, "");
@@ -12,10 +12,10 @@ const remarks = joi.string().allow(null, "");
 const body = {
   vendorId: vendorId.required(),
   type: type.required(),
-  paid: paid.required(),
+  paid,
   mode: mode.required(),
-  paidDate: paidDate.required(),
-  billDate: billDate.required(),
+  paidDate,
+  billDate,
   billNo: billNo.required(),
   remarks,
 };
