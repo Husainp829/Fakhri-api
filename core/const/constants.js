@@ -57,5 +57,6 @@ module.exports = {
     RECEIPT_FMB: "RECEIPT_FMB",
     FMB: "FMB",
     LEDGER: "LEDGER",
+    HALL_BOOKING: "HALL_BOOKING",
   },
 };

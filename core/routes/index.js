@@ -30,5 +30,9 @@ router.use("/stats", require("../api/stats/routes"));
 router.use("/vendorTypes", require("../api/vendorTypes/routes"));
 router.use("/vendors", require("../api/vendors/routes"));
 router.use("/vendorLedger", require("../api/vendorLedger/routes"));
+router.use("/bookingPurpose", require("../api/bookingPurposes/routes"));
+router.use("/halls", require("../api/halls/routes"));
+router.use("/bookings", require("../api/bookings/routes"));
+router.use("/hallBookings", require("../api/hallBookings/routes"));
 
 module.exports = router;
