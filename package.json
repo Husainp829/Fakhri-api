@@ -57,6 +57,7 @@
     "squel": "^5.13.0",
     "stream": "0.0.2",
     "streamifier": "^0.1.1",
+    "twilio": "^5.7.3",
     "uuid": "^8.3.2",
     "validator": "^13.5.2",
     "winston": "^3.3.3",
