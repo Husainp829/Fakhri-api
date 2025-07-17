@@ -1,10 +1,15 @@
-const moment = require("moment");
+/* eslint-disable no-console */
+const dayjs = require("dayjs");
+const mustache = require("mustache");
+const { keyBy } = require("lodash");
 const baseRepo = require("../base/repo");
 const constants = require("../../const/constants");
 const meta = require("./meta");
 const { sequelize } = require("../../../models");
 const models = require("../../../models");
 const { sendWhatsAppMessage } = require("../../service/whatsapp");
+const { calcBookingTotals } = require("../../utils/helper");
+const { bookingCreationTemplate } = require("../../utils/messageTemplates");
 
 const ep = meta.ENDPOINT;
 const include = [
@@ -12,6 +17,20 @@ const include = [
     model: models.hallBookings,
     as: "hallBookings",
     attributes: ["id", "hallId", "date", "slot", "thaals"],
+  },
+];
+
+const includeAll = [
+  ...include,
+  {
+    model: models.rentBookingReceipts,
+    as: "rentBookingReceipts",
+    attributes: ["id"],
+  },
+  {
+    model: models.depositBookingReceipts,
+    as: "depositBookingReceipts",
+    attributes: ["id"],
   },
 ];
 
@@ -42,106 +61,173 @@ async function findById(req, res) {
   }
 }
 
+async function sendCreateMessage(booking, halls) {
+  const messageData = {
+    organiser: booking.organiser,
+    hallBookings: halls.map((b) => ({
+      name: b.name,
+      formattedDate: dayjs(b.date).format("D MMM YYYY"),
+      slot: b.slot,
+    })),
+    rentReceipt: booking.rentBookingReceipts?.[0]
+      ? { url: `${constants.UI_URL}/#/cont-rcpt/${booking.rentBookingReceipts[0].id}` }
+      : undefined,
+    depositReceipt: booking.depositBookingReceipts?.[0]
+      ? { url: `${constants.UI_URL}/#/dep-rcpt/${booking.depositBookingReceipts[0].id}` }
+      : undefined,
+  };
+
+  const message = mustache.render(bookingCreationTemplate, messageData);
+  sendWhatsAppMessage({ phone: booking.phone, message }).catch((err) => {
+    console.error("Failed to send WhatsApp notification:", err.message);
+  });
+}
+
 async function insert(req, res) {
   const { body, decoded } = req;
   const { userId } = decoded;
 
-  const { organiser, purpose, phone, itsNo, hallBookings } = body;
+  const {
+    organiser,
+    purpose,
+    phone,
+    itsNo,
+    hallBookings,
+    sadarat,
+    mohalla,
+    depositPaidAmount,
+    paidAmount,
+  } = body;
 
   try {
-    if (
-      !hallBookings ||
-      !Array.isArray(hallBookings) ||
-      hallBookings.length === 0
-    ) {
+    if (!hallBookings?.length) {
       throw new Error("hallBookings must be a non-empty array.");
     }
 
+    const hallIds = hallBookings.map((h) => h.hallId);
+    const hallsArr = await baseRepo.findAll("halls", {
+      filter: JSON.stringify({ id: hallIds }),
+    });
+    const halls = keyBy(hallsArr.rows, "id");
+
+    const enrichedBookings = hallBookings.map((h) => ({ ...h, ...halls[h.hallId] }));
+    const { rent: rentAmount, deposit: depositAmount, thaals: thaalCount } = calcBookingTotals(
+      enrichedBookings
+    );
+
     const result = await sequelize.transaction(async (t) => {
-      const { currentValue: bookingVal, prefix: bookingPrefix } =
-        (await baseRepo.getCurrentSequence(
-          constants.SEQUENCE_NAMES.HALL_BOOKING
-        )) || {};
-      const bookingN = `${bookingPrefix}-${bookingVal + 1}`;
+      const [hallSeq, rentReceiptSeq, depositReceiptSeq] = await Promise.all([
+        baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.HALL_BOOKING),
+        paidAmount > 0
+          ? baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.RENT_BOOKING_RECEIPT)
+          : Promise.resolve(null),
+        depositPaidAmount > 0
+          ? baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.DEPOSIT_BOOKING_RECEIPT)
+          : Promise.resolve(null),
+      ]);
+
+      const bookingNo = `${hallSeq.prefix}-${hallSeq.currentValue + 1}`;
+
       // Insert parent booking
       const bookingData = await baseRepo.insert(
         ep,
         {
-          bookingNo: bookingN,
+          bookingNo,
           organiser,
           purpose,
           phone,
           itsNo,
           submitter: userId,
+          sadarat,
+          mohalla,
+          rentAmount,
+          depositAmount,
+          thaalAmount: thaalCount * constants.PER_THAAL_COST,
+          depositPaidAmount,
+          paidAmount,
         },
         t
       );
 
       const bookingId = bookingData?.rows?.[0]?.id;
+      if (!bookingId) throw new Error("Failed to create main booking.");
 
-      if (!bookingId) {
-        throw new Error("Failed to create main booking.");
+      // Prepare inserts
+      const promises = [];
+
+      // Hall booking sequence update
+      promises.push(baseRepo.updateSequence(constants.SEQUENCE_NAMES.HALL_BOOKING, t));
+
+      // Hall bookings
+      const hallBookingRows = hallBookings.map(({ hallId, slot, date, thaals }) => ({
+        bookingId,
+        hallId,
+        slot,
+        date,
+        thaals,
+      }));
+      promises.push(models.hallBookings.bulkCreate(hallBookingRows, { transaction: t }));
+
+      const receiptBase = {
+        bookingId,
+        organiser,
+        organiserIts: itsNo,
+        date: new Date(),
+        amount: paidAmount,
+        mode: "CASH",
+        total: paidAmount,
+        createdBy: userId,
+      };
+
+      // Rent receipt
+      if (paidAmount > 0 && rentReceiptSeq) {
+        const receiptNo = `${rentReceiptSeq.prefix}-${rentReceiptSeq.currentValue + 1}`;
+        promises.push(
+          baseRepo.insert("rentBookingReceipts", { ...receiptBase, receiptNo }, t),
+          baseRepo.updateSequence(constants.SEQUENCE_NAMES.RENT_BOOKING_RECEIPT, t)
+        );
       }
 
-      const hallBookingRows = hallBookings.map(
-        ({ hallId, slot, date, thaals }) => ({
-          bookingId,
-          hallId,
-          slot,
-          date,
-          thaals,
-        })
-      );
+      // Deposit receipt
+      if (depositPaidAmount > 0 && depositReceiptSeq) {
+        const depositNo = `${depositReceiptSeq.prefix}-${depositReceiptSeq.currentValue + 1}`;
+        promises.push(
+          baseRepo.insert("depositBookingReceipts", { ...receiptBase, depositNo, mode: "CASH" }, t),
+          baseRepo.updateSequence(constants.SEQUENCE_NAMES.DEPOSIT_BOOKING_RECEIPT, t)
+        );
+      }
 
-      await models.hallBookings.bulkCreate(hallBookingRows, { transaction: t });
-      await baseRepo.updateSequence(constants.SEQUENCE_NAMES.HALL_BOOKING, t);
+      // Execute all inserts/updates in parallel
+      await Promise.all(promises);
 
       return bookingId;
     });
 
-    sendResponse(
-      res,
-      { count: 1, rows: [{ id: result }] },
-      constants.HTTP_STATUS_CODES.CREATED
-    );
+    const bookings = await baseRepo.findById(ep, "id", result, includeAll);
+    const booking = bookings.rows?.[0] || {};
 
-    // Send WhatsApp notification on successful booking
-    try {
-      if (phone) {
-        const message = `Salaam-e-Jameel,\n\n*${organiser}*, your booking for has been confirmed.\n\n${hallBookings
-          .map((booking) => {
-            const formattedDate = moment(booking.date, "YYYY-MM-DD").format(
-              "D MMM YYYY"
-            );
-            return `${booking.hallId}: ${formattedDate} - ${booking.slot}`;
-          })
-          .join("\n")}\n\nShukran`;
-        // Fire and forget, don't block response
-        sendWhatsAppMessage({ phone, message }).catch((err) => {
-          console.error("Failed to send WhatsApp notification:", err.message);
-        });
-      }
-    } catch (err) {
-      console.error("Error in WhatsApp notification logic:", err.message);
+    sendResponse(res, { count: 1, rows: [{ id: result }] }, constants.HTTP_STATUS_CODES.CREATED);
+    // Async WhatsApp notification (non-blocking)
+    if (phone) {
+      await sendCreateMessage(booking, enrichedBookings);
     }
   } catch (error) {
-    if (error.name === "SequelizeUniqueConstraintError") {
-      sendError(
-        res,
-        {
-          ...error,
-          message:
-            "One or more halls are already booked for the given slot and date.",
-        },
-        constants.HTTP_STATUS_CODES.ALREADY_EXISTS
-      );
-    } else {
-      sendError(
-        res,
-        { message: error.message || "Internal server error" },
-        constants.HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR
-      );
-    }
+    const status =
+      error.name === "SequelizeUniqueConstraintError"
+        ? constants.HTTP_STATUS_CODES.ALREADY_EXISTS
+        : constants.HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR;
+
+    sendError(
+      res,
+      {
+        ...error,
+        message:
+          error.name === "SequelizeUniqueConstraintError"
+            ? "One or more halls are already booked for the given slot and date."
+            : error.message || "Internal server error",
+      },
+      status
+    );
   }
 }
 
@@ -167,11 +253,7 @@ async function remove(req, res) {
   try {
     const count = await baseRepo.remove(ep, id);
     if (count > 0) {
-      sendResponse(
-        res,
-        { count, rows: [{ id }] },
-        constants.HTTP_STATUS_CODES.OK
-      );
+      sendResponse(res, { count, rows: [{ id }] }, constants.HTTP_STATUS_CODES.OK);
     } else {
       code = constants.HTTP_STATUS_CODES.BAD_REQUEST;
       throwError("Does not exist", true);

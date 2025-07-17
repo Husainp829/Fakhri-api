@@ -1,5 +1,6 @@
 /* eslint-disable implicit-arrow-linebreak */
 const gc = require("../../storageConfig");
+const { PER_THAAL_COST } = require("../const/constants");
 
 const bucket = gc.bucket("explat-bucket"); // should be your bucket name
 
@@ -82,4 +83,18 @@ const getGentsLadiesCount = (familyMembers) => {
   return { gentsCount, ladiesCount };
 };
 
-module.exports = { uploadImage, constructMailConfig, getGentsLadiesCount };
+const calcBookingTotals = (halls = []) =>
+  halls.reduce(
+    ({ rent, deposit, thaals, total }, { rent: r = 0, deposit: d = 0, thaals: t = 0 }) => {
+      const hallTotal = r + d + t * PER_THAAL_COST;
+      return {
+        rent: rent + r,
+        deposit: deposit + d,
+        thaals: thaals + t,
+        total: total + hallTotal,
+      };
+    },
+    { rent: 0, deposit: 0, thaals: 0, total: 0 }
+  );
+
+module.exports = { uploadImage, constructMailConfig, getGentsLadiesCount, calcBookingTotals };

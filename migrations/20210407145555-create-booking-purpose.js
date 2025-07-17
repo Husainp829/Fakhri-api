@@ -7,7 +7,6 @@ module.exports = {
         allowNull: false,
         autoIncrement: false,
       },
-      sarkariLagat: { type: Sequelize.INTEGER, default: 0, allowNull: false },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

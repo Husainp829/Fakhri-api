@@ -8,7 +8,6 @@ module.exports = (sq, type) => {
         allowNull: false,
         autoIncrement: false,
       },
-      sarkariLagat: type.INTEGER,
       createdAt: type.DATE,
       updatedAt: type.DATE,
     },

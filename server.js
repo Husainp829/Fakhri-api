@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const express = require("express");
 const morgan = require("morgan");
 const firebase = require("firebase-admin");
+const { default: rateLimit } = require("express-rate-limit");
 
 const serviceAccount = require("./fcmkey.json");
 const winston = require("./core/const/winston");
@@ -15,6 +16,18 @@ firebase.initializeApp({
 });
 
 const app = express();
+
+// Limit each IP to 100 requests per 15 minutes
+const limiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again later.",
+  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Apply rate limiter to all routes
+app.use(limiter);
 
 app.all("/*", (req, res, next) => {
   // const corsWhitelist = constants.ALLOWED_ORIGINS[process.env.NODE_ENV];

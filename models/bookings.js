@@ -16,12 +16,14 @@ module.exports = (sq, type) => {
       itsNo: type.STRING,
       depositAmount: type.INTEGER,
       rentAmount: type.INTEGER,
-      sarkariLagat: type.INTEGER,
       thaalAmount: type.INTEGER,
       paidAmount: type.INTEGER,
+      depositPaidAmount: type.INTEGER,
       writeOffAmount: type.INTEGER,
       refundAmount: type.INTEGER,
       sadarat: type.STRING,
+      mohalla: type.STRING,
+      submitter: type.STRING,
       createdAt: type.DATE,
       updatedAt: type.DATE,
     },
@@ -36,6 +38,15 @@ module.exports = (sq, type) => {
       foreignKey: "bookingId",
       as: "hallBookings",
     });
+    model.hasMany(models.rentBookingReceipts, {
+      foreignKey: "bookingId",
+      as: "rentBookingReceipts",
+    });
+    model.hasMany(models.depositBookingReceipts, {
+      foreignKey: "bookingId",
+      as: "depositBookingReceipts",
+    });
+    model.hasOne(models.admins, { as: "admin", foreignKey: "id", sourceKey: "submitter" });
   };
 
   return model;

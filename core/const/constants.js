@@ -58,5 +58,9 @@ module.exports = {
     FMB: "FMB",
     LEDGER: "LEDGER",
     HALL_BOOKING: "HALL_BOOKING",
+    RENT_BOOKING_RECEIPT: "RENT_BOOKING_RECEIPT",
+    DEPOSIT_BOOKING_RECEIPT: "DEPOSIT_BOOKING_RECEIPT",
   },
+  PER_THAAL_COST: 110,
+  UI_URL: "http://fakhri-jamaat.web.app",
 };

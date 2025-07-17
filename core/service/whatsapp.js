@@ -15,23 +15,18 @@ const client = twilio(accountSid, authToken);
 function sendWhatsAppMessage({ phone, message }) {
   if (!accountSid || !authToken || !whatsappFrom) {
     return Promise.reject(
-      new Error(
-        "Twilio credentials or WhatsApp sender number not set in environment variables."
-      )
+      new Error("Twilio credentials or WhatsApp sender number not set in environment variables.")
     );
   }
+  console.log(message);
   return client.messages
     .create({
       from: `whatsapp:${whatsappFrom}`,
       to: `whatsapp:${phone}`,
       body: message,
     })
-    .then((response) => {
-      console.log("WhatsApp message sent:", response.sid);
-      return response;
-    })
+    .then((response) => response)
     .catch((error) => {
-      console.error("Error sending WhatsApp message:", error.message);
       throw error;
     });
 }
