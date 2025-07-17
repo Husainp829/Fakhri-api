@@ -70,10 +70,10 @@ async function sendCreateMessage(booking, halls) {
       slot: b.slot,
     })),
     rentReceipt: booking.rentBookingReceipts?.[0]
-      ? { url: `${constants.UI_URL}/#/cont-rcpt/${booking.rentBookingReceipts[0].id}` }
+      ? { url: `${constants.UI_URL}/#/cont-rcpt?id=${booking.rentBookingReceipts[0].id}` }
       : undefined,
     depositReceipt: booking.depositBookingReceipts?.[0]
-      ? { url: `${constants.UI_URL}/#/dep-rcpt/${booking.depositBookingReceipts[0].id}` }
+      ? { url: `${constants.UI_URL}/#/dep-rcpt?id=${booking.depositBookingReceipts[0].id}` }
       : undefined,
   };
 
