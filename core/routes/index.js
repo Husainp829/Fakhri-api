@@ -35,5 +35,6 @@ router.use("/halls", require("../api/halls/routes"));
 router.use("/bookings", require("../api/bookings/routes"));
 router.use("/hallBookings", require("../api/hallBookings/routes"));
 router.use("/contRcpt", require("../api/rentBookingReceipt/routes"));
+router.use("/depRcpt", require("../api/depositBookingReceipt/routes"));
 
 module.exports = router;

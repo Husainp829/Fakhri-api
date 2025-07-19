@@ -30,6 +30,19 @@ async function findAll(req, res) {
     query.HOF_FM_TYPE = "HOF";
     delete query.isHOF;
   }
+  query.attributes = [
+    "id",
+    "ITS_ID",
+    "HOF_FM_TYPE",
+    "HOF_ID",
+    "Full_Name",
+    "Age",
+    "Gender",
+    "Mobile",
+    "Email",
+    "Address",
+    "updatedAt",
+  ];
   baseRepo
     .findAll(ep, query)
     .then((response) => {
@@ -86,23 +99,6 @@ async function upload(req, res) {
   } catch (e) {
     sendError(res, e.message, constants.HTTP_STATUS_CODES.BAD_REQUEST);
   }
-
-  // Set the parameters for S3 upload
-  // const params = {
-  //   Bucket: process.env.DO_SPACES_NAME,
-  //   ACL: "public-read",
-  //   Key: fullPath,
-  //   Body: imageBuffer,
-  //   ContentType: contentType,
-  // };
-
-  // // Upload the image to S3
-  // s3.upload(params, (error, data) => {
-  //   if (error) {
-  //     return sendError(res, error.message, constants.HTTP_STATUS_CODES.BAD_REQUEST);
-  //   }
-  //   return sendResponse(res, { image: data.Location }, constants.HTTP_STATUS_CODES.OK);
-  // });
 }
 
 module.exports = {

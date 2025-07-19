@@ -9,13 +9,20 @@ const db = {};
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: "mysql",
-  port: process.env.DB_PORT,
+  port: Number(process.env.DB_PORT),
   pool: {
-    max: parseInt(process.env.DB_MAX, 10),
+    max: parseInt(process.env.DB_MAX, 10) || 10, // max connections in pool
+    min: 2, // keep at least 2 warm connections
+    acquire: 30000, // max time (ms) to get a connection before throwing error
+    idle: 10000, // remove idle connection after this (ms)
+    evict: 10000, // time after which idle connections are evicted
   },
   dialectOptions: {
     bigNumberStrings: true,
   },
+  benchmark: process.env.NODE_ENV === "development", // shows query timings in logs
+  // eslint-disable-next-line no-console
+  logging: process.env.NODE_ENV === "development" ? console.log : false, // logs queries
 });
 
 fs.readdirSync(__dirname)

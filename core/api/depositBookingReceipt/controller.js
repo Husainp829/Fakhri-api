@@ -13,9 +13,18 @@ const include = [
   },
 ];
 
+const includeBooking = [
+  {
+    model: models.bookings,
+    as: "booking",
+    attributes: ["bookingNo", "purpose", "mohalla"],
+  },
+];
+
 async function findAll(req, res) {
-  const { query } = req;
+  const { query, decoded } = req;
   query.include = include;
+  query.eventId = decoded.eventId;
   baseRepo
     .findAll(ep, query)
     .then((response) => {
@@ -27,7 +36,7 @@ async function findAll(req, res) {
 async function findById(req, res) {
   let code;
   try {
-    const data = await baseRepo.findById(ep, "id", req.params.id);
+    const data = await baseRepo.findById(ep, "id", req.params.id, includeBooking);
     if (data.count) {
       sendResponse(res, data, constants.HTTP_STATUS_CODES.OK);
     } else {

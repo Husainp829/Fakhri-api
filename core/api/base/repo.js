@@ -32,6 +32,7 @@ function findAll(resource, query) {
   const params = {
     where: whereCondition,
     attributes: attributes || { exclude: ["deletedAt"] },
+    raw: true,
   };
 
   if (orderBy && order && limit && startAfter >= 0) {
@@ -39,22 +40,30 @@ function findAll(resource, query) {
     params.limit = parseInt(limit, 10);
     params.offset = parseInt(startAfter, 10);
   }
+
   if (include) {
     params.include = include;
   }
-  return models[resource]
-    .findAndCountAll({ ...params })
-    .then((response) => ({ ...response, rows: response.rows.map((r) => r.toJSON()) }));
+
+  return models[resource].findAndCountAll(params);
 }
 
-function findById(resource, columnName = "id", id, include = undefined, attributes = undefined) {
-  const where = {
+function findById(resource, columnName = "id", id, include, attributes) {
+  const whereCondition = {
     [columnName]: id,
   };
 
-  return models[resource]
-    .findAndCountAll({ where, include, attributes })
-    .then((response) => ({ ...response, rows: response.rows.map((r) => r.toJSON()) }));
+  const params = {
+    where: whereCondition,
+    attributes: attributes || { exclude: ["deletedAt"] },
+    raw: true,
+  };
+
+  if (include) {
+    params.include = include;
+  }
+
+  return models[resource].findAndCountAll(params);
 }
 
 function insert(resource, data, transaction) {

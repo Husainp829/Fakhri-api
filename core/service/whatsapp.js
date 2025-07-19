@@ -18,7 +18,6 @@ function sendWhatsAppMessage({ phone, message }) {
       new Error("Twilio credentials or WhatsApp sender number not set in environment variables.")
     );
   }
-  console.log(message);
   return client.messages
     .create({
       from: `whatsapp:${whatsappFrom}`,

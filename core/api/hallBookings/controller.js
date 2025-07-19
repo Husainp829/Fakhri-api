@@ -2,39 +2,45 @@ const { Op } = require("sequelize");
 const baseRepo = require("../base/repo");
 const constants = require("../../const/constants");
 const meta = require("./meta");
+const models = require("../../../models");
 
 const ep = meta.ENDPOINT;
-const include = [];
+const include = [
+  {
+    model: models.bookings,
+    as: "booking",
+    attributes: ["bookingNo", "purpose", "mohalla", "organiser", "itsNo", "sadarat", "phone"],
+    required: true,
+  },
+  {
+    model: models.halls,
+    as: "hall",
+    attributes: ["name"],
+    required: true,
+  },
+];
 
 async function findAll(req, res) {
   const { query } = req;
   query.include = include;
-
+  query.where = {};
   if (query.hallId && query.slot && query.date) {
     query.where = {
-      [Op.and]: [
-        { hallId: { [Op.eq]: `%${query.hallId}%` } },
-        { slot: { [Op.eq]: `%${query.slot}%` } },
-        { date: { [Op.eq]: `%${query.date}%` } },
-      ],
+      hallId: query.hallId,
+      slot: query.slot,
+      date: query.date,
     };
     delete query.hallId;
-    delete query.hallId;
-    delete query.hallId;
-  }
-  if (query.slot) {
-    query.where = {
-      ...query.where,
-      slot: { [Op.eq]: query.slot },
-    };
     delete query.slot;
+    delete query.date;
   }
-  if (query.namaazVenue) {
-    query.where = {
-      ...query.where,
-      namaazVenue: { [Op.eq]: query.namaazVenue },
+
+  if (query.start && query.end) {
+    query.where.date = {
+      [Op.between]: [query.start, query.end],
     };
-    delete query.namaazVenue;
+    delete query.start;
+    delete query.end;
   }
 
   baseRepo
