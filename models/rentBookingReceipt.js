@@ -17,7 +17,11 @@ module.exports = (sq, type) => {
       amount: type.INTEGER,
       mode: type.STRING,
       details: type.STRING,
-      total: type.INTEGER,
+      ref: type.STRING,
+      type: {
+        type: type.ENUM("RENT", "DEPOSIT"),
+        allowNull: false,
+      },
       createdBy: type.STRING,
       createdAt: type.DATE,
       updatedAt: type.DATE,

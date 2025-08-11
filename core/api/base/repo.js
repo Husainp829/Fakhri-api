@@ -48,7 +48,7 @@ function findAll(resource, query) {
   return models[resource].findAndCountAll(params);
 }
 
-function findById(resource, columnName = "id", id, include, attributes) {
+async function findById(resource, columnName = "id", id, include, attributes) {
   const whereCondition = {
     [columnName]: id,
   };
@@ -56,14 +56,14 @@ function findById(resource, columnName = "id", id, include, attributes) {
   const params = {
     where: whereCondition,
     attributes: attributes || { exclude: ["deletedAt"] },
-    raw: true,
   };
 
   if (include) {
     params.include = include;
   }
 
-  return models[resource].findAndCountAll(params);
+  const rows = await models[resource].findAll(params).then((row) => row.map((r) => r.toJSON()));
+  return { count: rows.length, rows: rows || [] };
 }
 
 function insert(resource, data, transaction) {
@@ -106,12 +106,12 @@ function updateMany(resource, ids, data) {
   });
 }
 
-function remove(resource, id) {
+function remove(resource, id, force = false) {
   const where = {
     id,
   };
 
-  return models[resource].destroy({ where });
+  return models[resource].destroy({ where, force });
 }
 
 function updateOrCreate(resource, where, newItem) {

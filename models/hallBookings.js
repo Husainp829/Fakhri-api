@@ -27,11 +27,20 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
+      withAC: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      rent: DataTypes.INTEGER,
+      deposit: DataTypes.INTEGER,
+      thaalAmount: DataTypes.INTEGER,
+      acCharges: DataTypes.INTEGER,
     },
     {
       tableName: "hallBookings",
-      paranoid: true, // enable deletedAt
-      timestamps: true, // enables createdAt & updatedAt
+      paranoid: true,
+      timestamps: true,
     }
   );
 

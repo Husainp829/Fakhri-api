@@ -3,6 +3,7 @@ const baseRepo = require("../base/repo");
 const constants = require("../../const/constants");
 const meta = require("./meta");
 const models = require("../../../models");
+const { calculateThaalAmount } = require("../../utils/bookingCalculations");
 
 const ep = meta.ENDPOINT;
 const include = [
@@ -43,6 +44,11 @@ async function findAll(req, res) {
     delete query.end;
   }
 
+  if (query.bookingId) {
+    query.where.bookingId = query.bookingId;
+    delete query.bookingId;
+  }
+
   baseRepo
     .findAll(ep, query)
     .then((response) => {
@@ -68,18 +74,27 @@ async function findById(req, res) {
 
 async function insert(req, res) {
   const { body } = req;
-  const { bookingId, hallId, date, slot } = body;
+  const { bookingId, hallId, date, slot, thaals, withAC } = body;
 
   try {
     if (!bookingId || !hallId || !date || !slot) {
       throw new Error("bookingId, hallId, date, and slot are required.");
     }
 
+    const hallsArr = await baseRepo.findById("halls", "id", hallId, null);
+    const hall = hallsArr.rows?.[0] || {};
+
     const result = await baseRepo.insert(ep, {
       bookingId,
       hallId,
       date,
       slot,
+      withAC,
+      thaals,
+      thaalAmount: calculateThaalAmount(thaals),
+      rent: hall.rent || 0,
+      deposit: hall.deposit || 0,
+      acCharges: hall.acCharges || 0,
     });
 
     sendResponse(res, result, constants.HTTP_STATUS_CODES.CREATED);
@@ -103,7 +118,7 @@ async function insert(req, res) {
 async function update(req, res) {
   let code;
   const { body } = req;
-  const { bookingId, hallId, date, slot } = body;
+  const { bookingId, hallId, date, slot, thaals, withAC } = body;
 
   try {
     const response = await baseRepo.update(ep, req.params.id, {
@@ -111,6 +126,8 @@ async function update(req, res) {
       hallId,
       date,
       slot,
+      thaals,
+      withAC,
     });
 
     if (response && response.count > 0) {
@@ -139,7 +156,7 @@ async function remove(req, res) {
   let code;
   const { id } = req.params;
   try {
-    const count = await baseRepo.remove(ep, id);
+    const count = await baseRepo.remove(ep, id, true);
     if (count > 0) {
       sendResponse(res, { count, rows: [{ id }] }, constants.HTTP_STATUS_CODES.OK);
     } else {

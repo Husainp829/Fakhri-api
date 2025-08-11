@@ -15,7 +15,9 @@ module.exports = {
       amount: { type: Sequelize.INTEGER },
       mode: { type: Sequelize.STRING },
       details: { type: Sequelize.STRING },
-      total: { type: Sequelize.INTEGER },
+      organiserIts: { type: Sequelize.STRING },
+      type: { type: Sequelize.STRING },
+      ref: { type: Sequelize.STRING },
       createdBy: { type: Sequelize.STRING },
       createdAt: {
         allowNull: false,

@@ -1,26 +1,23 @@
 const joi = require("joi");
 
-const formNo = joi.string();
-const HOFId = joi.string().allow(null, "");
-const HOFName = joi.string().allow(null, "");
+const type = joi.string().valid("RENT", "DEPOSIT");
+const organiser = joi.string();
+const organiserIts = joi.string().allow(null, "");
+
 const amount = joi.number();
 const mode = joi.string().allow(null, "");
-const details = joi.string().allow(null, "");
-const markaz = joi.string().allow(null, "");
-const namaazVenue = joi.string().allow(null, "");
+const ref = joi.string().allow(null, "");
 
-const niyaazId = joi.string();
+const bookingId = joi.string();
 
 const body = {
-  niyaazId: niyaazId.required(),
-  formNo: formNo.required(),
-  markaz: markaz.required(),
-  namaazVenue: namaazVenue.required(),
-  HOFId: HOFId.required(),
-  HOFName: HOFName.required(),
+  type: type.required(),
+  organiser: organiser.required(),
+  organiserIts: organiserIts.required(),
+  bookingId: bookingId.required(),
   amount: amount.min(1).required(),
   mode: mode.required(),
-  details,
+  ref,
 };
 
 const insert = joi.object(body);

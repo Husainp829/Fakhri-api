@@ -5,11 +5,15 @@ const meta = require("./meta");
 const models = require("../../../models");
 
 const ep = meta.ENDPOINT;
-const niyaaz = "niyaaz";
+const bookings = "bookings";
 const include = [
   {
     model: models.admins,
     as: "admin",
+  },
+  {
+    model: models.bookings,
+    as: "booking",
   },
 ];
 
@@ -27,7 +31,7 @@ async function findAll(req, res) {
 async function findById(req, res) {
   let code;
   try {
-    const data = await baseRepo.findById(ep, "id", req.params.id);
+    const data = await baseRepo.findById(ep, "id", req.params.id, include);
     if (data.count) {
       sendResponse(res, data, constants.HTTP_STATUS_CODES.OK);
     } else {
@@ -41,36 +45,48 @@ async function findById(req, res) {
 
 async function insert(req, res) {
   const { body, decoded } = req;
-  const { userId, eventId } = decoded;
+  const { userId } = decoded;
 
   try {
-    const { niyaazId, formNo, HOFId, HOFName, amount, mode, details, markaz, namaazVenue } = body;
+    const { bookingId, organiser, organiserIts, amount, mode, ref, type } = body;
     const { currentValue, prefix } =
-      (await baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.RECEIPT_NIYAAZ)) || {};
+      (await baseRepo.getCurrentSequence(
+        type === "RENT"
+          ? constants.SEQUENCE_NAMES.RENT_BOOKING_RECEIPT
+          : constants.SEQUENCE_NAMES.DEPOSIT_BOOKING_RECEIPT
+      )) || {};
     const result = await sequelize.transaction(async (t) => {
       const receiptN = `${prefix}-${currentValue + 1}`;
       const receiptData = await baseRepo.insert(
         ep,
         {
           receiptNo: receiptN,
-          eventId,
-          formNo,
-          niyaazId,
-          markaz,
-          namaazVenue,
-          HOFId,
-          HOFName,
+          bookingId,
+          organiser,
+          organiserIts,
           date: new Date(),
           amount,
           mode,
-          total: amount,
           createdBy: userId,
-          details,
+          ref,
+          type,
         },
         t
       );
-      await baseRepo.appendAmount(niyaaz, niyaazId, { paidAmount: parseInt(amount, 10) }, t);
-      await baseRepo.updateSequence(constants.SEQUENCE_NAMES.RECEIPT_NIYAAZ, t);
+      await baseRepo.appendAmount(
+        bookings,
+        bookingId,
+        type === "RENT"
+          ? { paidAmount: parseInt(amount, 10) }
+          : { depositPaidAmount: parseInt(amount, 10) },
+        t
+      );
+      await baseRepo.updateSequence(
+        type === "RENT"
+          ? constants.SEQUENCE_NAMES.RENT_BOOKING_RECEIPT
+          : constants.SEQUENCE_NAMES.DEPOSIT_BOOKING_RECEIPT,
+        t
+      );
       // update in sequence
       return receiptData;
     });

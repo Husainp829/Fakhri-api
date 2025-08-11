@@ -14,6 +14,7 @@ module.exports = (sq, type) => {
       thaalCapacity: type.INTEGER,
       rent: type.INTEGER,
       deposit: type.INTEGER,
+      acCharges: type.INTEGER,
       createdAt: type.DATE,
       updatedAt: type.DATE,
     },

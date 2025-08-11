@@ -8,7 +8,7 @@ const meta = require("./meta");
 const { sequelize } = require("../../../models");
 const models = require("../../../models");
 const { sendWhatsAppMessage } = require("../../service/whatsapp");
-const { calcBookingTotals } = require("../../utils/helper");
+const { calculateThaalAmount, calcBookingTotals } = require("../../utils/bookingCalculations");
 const { bookingCreationTemplate } = require("../../utils/messageTemplates");
 
 const ep = meta.ENDPOINT;
@@ -16,11 +16,12 @@ const include = [
   {
     model: models.hallBookings,
     as: "hallBookings",
-    attributes: ["id", "hallId", "date", "slot", "thaals"],
+    attributes: { exclude: ["deletedAt"] },
     include: [
       {
         model: models.halls,
         as: "hall",
+        attributes: ["name"],
       },
     ],
   },
@@ -31,11 +32,6 @@ const includeAll = [
   {
     model: models.rentBookingReceipts,
     as: "rentBookingReceipts",
-    attributes: ["id"],
-  },
-  {
-    model: models.depositBookingReceipts,
-    as: "depositBookingReceipts",
     attributes: ["id"],
   },
 ];
@@ -78,9 +74,6 @@ async function sendCreateMessage(booking, halls) {
     rentReceipt: booking.rentBookingReceipts?.[0]
       ? { url: `${constants.UI_URL}/#/cont-rcpt/${booking.rentBookingReceipts[0].id}` }
       : undefined,
-    depositReceipt: booking.depositBookingReceipts?.[0]
-      ? { url: `${constants.UI_URL}/#/dep-rcpt/${booking.depositBookingReceipts[0].id}` }
-      : undefined,
   };
 
   const message = mustache.render(bookingCreationTemplate, messageData);
@@ -117,9 +110,6 @@ async function insert(req, res) {
     const halls = keyBy(hallsArr.rows, "id");
 
     const enrichedBookings = hallBookings.map((h) => ({ ...h, ...halls[h.hallId] }));
-    const { rent: rentAmount, deposit: depositAmount, thaals: thaalCount } = calcBookingTotals(
-      enrichedBookings
-    );
 
     const result = await sequelize.transaction(async (t) => {
       const [hallSeq, rentReceiptSeq, depositReceiptSeq] = await Promise.all([
@@ -146,9 +136,6 @@ async function insert(req, res) {
           submitter: userId,
           sadarat,
           mohalla,
-          rentAmount,
-          depositAmount,
-          thaalAmount: thaalCount * constants.PER_THAAL_COST,
           depositPaidAmount,
           paidAmount,
         },
@@ -165,13 +152,20 @@ async function insert(req, res) {
       promises.push(baseRepo.updateSequence(constants.SEQUENCE_NAMES.HALL_BOOKING, t));
 
       // Hall bookings
-      const hallBookingRows = hallBookings.map(({ hallId, slot, date, thaals }) => ({
-        bookingId,
-        hallId,
-        slot,
-        date,
-        thaals,
-      }));
+      const hallBookingRows = enrichedBookings.map(
+        ({ hallId, slot, date, thaals, rent, deposit, acCharges, withAC }) => ({
+          bookingId,
+          hallId,
+          slot,
+          date,
+          thaals,
+          thaalAmount: calculateThaalAmount(thaals),
+          rent,
+          deposit,
+          acCharges,
+          withAC,
+        })
+      );
       promises.push(models.hallBookings.bulkCreate(hallBookingRows, { transaction: t }));
 
       const receiptBase = {
@@ -189,16 +183,20 @@ async function insert(req, res) {
       if (paidAmount > 0 && rentReceiptSeq) {
         const receiptNo = `${rentReceiptSeq.prefix}-${rentReceiptSeq.currentValue + 1}`;
         promises.push(
-          baseRepo.insert("rentBookingReceipts", { ...receiptBase, receiptNo }, t),
+          baseRepo.insert("rentBookingReceipts", { ...receiptBase, receiptNo, type: "RENT" }, t),
           baseRepo.updateSequence(constants.SEQUENCE_NAMES.RENT_BOOKING_RECEIPT, t)
         );
       }
 
       // Deposit receipt
       if (depositPaidAmount > 0 && depositReceiptSeq) {
-        const depositNo = `${depositReceiptSeq.prefix}-${depositReceiptSeq.currentValue + 1}`;
+        const receiptNo = `${depositReceiptSeq.prefix}-${depositReceiptSeq.currentValue + 1}`;
         promises.push(
-          baseRepo.insert("depositBookingReceipts", { ...receiptBase, depositNo, mode: "CASH" }, t),
+          baseRepo.insert(
+            "rentBookingReceipts",
+            { ...receiptBase, receiptNo, mode: "CASH", type: "DEPOSIT" },
+            t
+          ),
           baseRepo.updateSequence(constants.SEQUENCE_NAMES.DEPOSIT_BOOKING_RECEIPT, t)
         );
       }
@@ -269,10 +267,101 @@ async function remove(req, res) {
   }
 }
 
+async function grantRaza(req, res) {
+  let code;
+  try {
+    const response = await baseRepo.update(ep, req.params.id, { razaGranted: true });
+
+    if (response && response.count > 0) {
+      sendResponse(res, response, constants.HTTP_STATUS_CODES.CREATED);
+    } else {
+      code = constants.HTTP_STATUS_CODES.BAD_REQUEST;
+      throwError("Record does not exist", true);
+    }
+  } catch (err) {
+    sendError(res, err, code);
+  }
+}
+
+async function writeOffAmount(req, res) {
+  let code;
+  try {
+    const bookings = await baseRepo.findById(ep, "id", req.params.id, includeAll);
+
+    const booking = bookings.rows?.[0] || {};
+
+    if (!booking.id) {
+      code = constants.HTTP_STATUS_CODES.NOT_FOUND;
+      throwError("Booking does not exist", true);
+    }
+
+    const { totalAmountPending } = calcBookingTotals({
+      halls: booking.hallBookings,
+      ...booking,
+    });
+    console.log({ totalAmountPending });
+    if (totalAmountPending <= 0) {
+      code = constants.HTTP_STATUS_CODES.BAD_REQUEST;
+      throwError("No pending amount to write off", true);
+    }
+
+    const response = await baseRepo.update(ep, req.params.id, {
+      writeOffAmount: totalAmountPending,
+    });
+
+    if (response && response.count > 0) {
+      sendResponse(res, response, constants.HTTP_STATUS_CODES.CREATED);
+    } else {
+      code = constants.HTTP_STATUS_CODES.BAD_REQUEST;
+      throwError("Record does not exist", true);
+    }
+  } catch (err) {
+    sendError(res, err, code);
+  }
+}
+
+async function closeBooking(req, res) {
+  let code;
+  try {
+    const { actualThaals, comments, extraExpenses } = req.body;
+    await sequelize.transaction(async (t) => {
+      const promises = [];
+      Object.entries(actualThaals).forEach(([hallId, count]) => {
+        if (count > 0) {
+          promises.push(baseRepo.update("hallBookings", hallId, { thaals: count }), t);
+        }
+      });
+
+      promises.push(
+        baseRepo.update(
+          ep,
+          req.params.id,
+          {
+            comments,
+            extraExpenses,
+            checkedOut: true,
+          },
+          t
+        )
+      );
+
+      await Promise.all(promises);
+      return true;
+    });
+
+    sendResponse(res, [{ id: req.params.id }], constants.HTTP_STATUS_CODES.CREATED);
+  } catch (err) {
+    sendError(res, err, code);
+  }
+}
+
 module.exports = {
   findAll,
   findById,
   insert,
   update,
   remove,
+  grantRaza,
+  writeOffAmount,
+  closeBooking,
 };
