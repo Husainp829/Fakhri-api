@@ -299,7 +299,6 @@ async function writeOffAmount(req, res) {
       halls: booking.hallBookings,
       ...booking,
     });
-    console.log({ totalAmountPending });
     if (totalAmountPending <= 0) {
       code = constants.HTTP_STATUS_CODES.BAD_REQUEST;
       throwError("No pending amount to write off", true);
