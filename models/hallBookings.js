@@ -36,6 +36,7 @@ module.exports = (sequelize, DataTypes) => {
       deposit: DataTypes.INTEGER,
       thaalAmount: DataTypes.INTEGER,
       acCharges: DataTypes.INTEGER,
+      kitchenCleaning: DataTypes.INTEGER,
     },
     {
       tableName: "hallBookings",

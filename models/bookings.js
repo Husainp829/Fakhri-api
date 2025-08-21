@@ -19,12 +19,14 @@ module.exports = (sq, type) => {
       writeOffAmount: type.INTEGER,
       refundReturnAmount: type.INTEGER,
       extraExpenses: type.INTEGER,
+      jamaatLagat: type.INTEGER,
       sadarat: type.STRING,
       mohalla: type.STRING,
       submitter: type.STRING,
       razaGranted: type.BOOLEAN,
       comments: type.STRING,
-      checkedOut: type.BOOLEAN,
+      checkedOutOn: type.DATE,
+      refundReturnedOn: type.DATE,
       createdAt: type.DATE,
       updatedAt: type.DATE,
     },
@@ -44,6 +46,7 @@ module.exports = (sq, type) => {
       as: "rentBookingReceipts",
     });
     model.hasOne(models.admins, { as: "admin", foreignKey: "id", sourceKey: "submitter" });
+    model.hasOne(models.bookingPurpose, { as: "bookingPurpose", foreignKey: "id", sourceKey: "purpose" });
   };
 
   return model;

@@ -10,6 +10,8 @@ const depositPaidAmount = joi.number();
 const paidAmount = joi.number();
 const extraExpenses = joi.number();
 const writeOffAmount = joi.number();
+const mode = joi.string();
+const ref = joi.string();
 
 const hallBookings = joi.array().items(
   joi.object({
@@ -41,6 +43,8 @@ const body = {
   mohalla,
   depositPaidAmount,
   paidAmount,
+  mode,
+  ref,
 };
 
 const closeBooking = joi.object({

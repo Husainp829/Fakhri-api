@@ -81,8 +81,18 @@ async function insert(req, res) {
       throw new Error("bookingId, hallId, date, and slot are required.");
     }
 
-    const hallsArr = await baseRepo.findById("halls", "id", hallId, null);
+    const [bookings, hallsArr] = await Promise.all([
+      baseRepo.findById("bookings", "id", bookingId, {
+        model: models.bookingPurpose,
+        as: "bookingPurpose",
+        required: true,
+      }),
+      baseRepo.findById("halls", "id", hallId, null),
+    ]);
+
     const hall = hallsArr.rows?.[0] || {};
+    const booking = bookings.rows?.[0] || {};
+    const { bookingPurpose } = booking;
 
     const result = await baseRepo.insert(ep, {
       bookingId,
@@ -91,10 +101,11 @@ async function insert(req, res) {
       slot,
       withAC,
       thaals,
-      thaalAmount: calculateThaalAmount(thaals),
+      thaalAmount: calculateThaalAmount(thaals, bookingPurpose?.perThaal),
       rent: hall.rent || 0,
       deposit: hall.deposit || 0,
       acCharges: hall.acCharges || 0,
+      kitchenCleaning: hall.kitchenCleaning || 0,
     });
 
     sendResponse(res, result, constants.HTTP_STATUS_CODES.CREATED);

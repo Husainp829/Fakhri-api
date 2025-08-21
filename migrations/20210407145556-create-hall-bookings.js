@@ -43,6 +43,11 @@ module.exports = {
         default: false,
         allowNull: false,
       },
+      kitchenCleaning: {
+        type: Sequelize.INTEGER,
+        default: 0,
+        allowNull: false,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

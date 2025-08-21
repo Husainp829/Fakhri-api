@@ -15,6 +15,7 @@ module.exports = (sq, type) => {
       rent: type.INTEGER,
       deposit: type.INTEGER,
       acCharges: type.INTEGER,
+      kitchenCleaning: type.INTEGER,
       createdAt: type.DATE,
       updatedAt: type.DATE,
     },

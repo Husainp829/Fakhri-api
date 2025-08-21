@@ -7,6 +7,20 @@ module.exports = {
         allowNull: false,
         autoIncrement: false,
       },
+      name: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      jamaatLagat: {
+        type: Sequelize.INTEGER,
+        default: 0,
+        allowNull: false,
+      },
+      perThaal: {
+        type: Sequelize.INTEGER,
+        default: 0,
+        allowNull: false,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

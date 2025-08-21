@@ -32,7 +32,6 @@ function findAll(resource, query) {
   const params = {
     where: whereCondition,
     attributes: attributes || { exclude: ["deletedAt"] },
-    raw: true,
   };
 
   if (orderBy && order && limit && startAfter >= 0) {
