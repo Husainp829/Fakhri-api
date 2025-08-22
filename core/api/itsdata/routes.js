@@ -9,7 +9,7 @@ const controller = require("./controller");
 
 const router = express.Router();
 
-router.get("/", authenticate, permissionMiddleware(PERMISSIONS.VIEW_ITS_DATA), controller.findAll);
+router.get("/", authenticate, controller.findAll);
 
 router.get(
   "/:id",
