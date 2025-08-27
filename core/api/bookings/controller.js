@@ -8,11 +8,7 @@ const meta = require("./meta");
 const { sequelize } = require("../../../models");
 const models = require("../../../models");
 const { sendWhatsAppMessage } = require("../../service/whatsapp");
-const {
-  calculateThaalAmount,
-  calcBookingTotals,
-  calcPerThaalCost,
-} = require("../../utils/bookingCalculations");
+const { calculateThaalAmount, calcBookingTotals } = require("../../utils/bookingCalculations");
 const { bookingCreationTemplate } = require("../../utils/messageTemplates");
 
 const ep = meta.ENDPOINT;
@@ -182,13 +178,26 @@ async function insert(req, res) {
 
       // Hall bookings
       const hallBookingRows = enrichedBookings.map(
-        ({ hallId, slot, date, thaals, rent, deposit, acCharges, withAC, kitchenCleaning }) => ({
+        ({
+          hallId,
+          slot,
+          date,
+          thaals,
+          rent,
+          deposit,
+          acCharges,
+          withAC,
+          kitchenCleaning,
+          includeThaalCharges,
+        }) => ({
           bookingId,
           hallId,
           slot,
           date,
           thaals,
-          thaalAmount: calculateThaalAmount(thaals, bookingPurpose.perThaal),
+          thaalAmount: includeThaalCharges
+            ? calculateThaalAmount(thaals, bookingPurpose.perThaal)
+            : 0,
           rent,
           deposit,
           acCharges,
@@ -326,11 +335,14 @@ async function writeOffAmount(req, res) {
       throwError("Booking does not exist", true);
     }
 
+    const bookingPurposeData = baseRepo.findById("bookingPurpose", "id", booking.purpose);
+    const bookingPurpose = bookingPurposeData.rows?.[0] || {};
+
     const { totalAmountPending } = calcBookingTotals({
       halls: booking.hallBookings,
       ...booking,
-      perThaalCost: calcPerThaalCost(booking.hallBookings),
-      jamaatLagatUnit: booking.jamaatLagat,
+      perThaalCost: bookingPurpose.perThaal || 0,
+      jamaatLagatUnit: bookingPurpose.jamaatLagat || 0,
     });
 
     if (totalAmountPending <= 0) {
@@ -400,11 +412,14 @@ async function settleRefund(req, res) {
       throwError("Booking does not exist", true);
     }
 
+    const bookingPurposeData = baseRepo.findById("bookingPurpose", "id", booking.purpose);
+    const bookingPurpose = bookingPurposeData.rows?.[0] || {};
+
     const { refundAmount } = calcBookingTotals({
       halls: booking.hallBookings,
       ...booking,
-      perThaalCost: calcPerThaalCost(booking.hallBookings),
-      jamaatLagatUnit: booking.jamaatLagat,
+      perThaalCost: bookingPurpose.perThaal || 0,
+      jamaatLagatUnit: bookingPurpose.jamaatLagat || 0,
     });
     if (refundAmount <= 0) {
       code = constants.HTTP_STATUS_CODES.BAD_REQUEST;

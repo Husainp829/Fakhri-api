@@ -9,23 +9,17 @@ const calculateTotalAmountPending = ({
   rentAmount = 0,
   kitchenCleaningAmount = 0,
   jamaatLagat = 0,
-  perThaalCost = 0,
-  thaals = 0,
+  thaalAmount = 0,
   paidAmount = 0,
   writeOffAmount = 0,
   extraExpenses = 0,
-}) => {
-  const thaalAmount = calculateThaalAmount(thaals, perThaalCost);
-  return (
-    (Number(rentAmount) || 0) +
-    (Number(kitchenCleaningAmount) || 0) +
-    (Number(jamaatLagat) || 0) +
-    thaalAmount +
-    (Number(extraExpenses) || 0) -
-    (Number(paidAmount) || 0) -
-    (Number(writeOffAmount) || 0)
-  );
-};
+}) => (Number(rentAmount) || 0) +
+  (Number(kitchenCleaningAmount) || 0) +
+  (Number(jamaatLagat) || 0) +
+  thaalAmount +
+  (Number(extraExpenses) || 0) -
+  (Number(paidAmount) || 0) -
+  (Number(writeOffAmount) || 0);
 
 const calcBookingTotals = ({
   halls = [],
@@ -41,6 +35,7 @@ const calcBookingTotals = ({
     deposit: depositAmount,
     thaals: thaalCount,
     kitchenCleaning: kitchenCleaningAmount,
+    thaalAmount,
   } = halls.reduce(
     (acc, hall) => {
       const {
@@ -50,6 +45,7 @@ const calcBookingTotals = ({
         acCharges = 0,
         kitchenCleaning = 0,
         withAC = false,
+        includeThaalCharges = true,
       } = hall;
 
       const rentWithAC = rent + (withAC ? acCharges : 0);
@@ -59,9 +55,11 @@ const calcBookingTotals = ({
         deposit: acc.deposit + deposit,
         kitchenCleaning: acc.kitchenCleaning + kitchenCleaning,
         thaals: acc.thaals + thaals,
+        thaalAmount:
+          acc.thaalAmount + (includeThaalCharges ? calculateThaalAmount(thaals, perThaalCost) : 0),
       };
     },
-    { rent: 0, deposit: 0, kitchenCleaning: 0, thaals: 0, total: 0 }
+    { rent: 0, deposit: 0, kitchenCleaning: 0, thaals: 0, thaalAmount: 0, total: 0 }
   );
 
   let jamaatLagat = 0;
@@ -73,8 +71,7 @@ const calcBookingTotals = ({
     rentAmount,
     kitchenCleaningAmount,
     jamaatLagat,
-    perThaalCost,
-    thaals: thaalCount,
+    thaalAmount,
     paidAmount,
     writeOffAmount,
     extraExpenses,
@@ -90,21 +87,14 @@ const calcBookingTotals = ({
     jamaatLagat,
     depositAmount,
     thaalCount,
-    thaalAmount: calculateThaalAmount(thaalCount, perThaalCost),
+    thaalAmount,
     totalAmountPending,
     totalDepositPending,
     refundAmount,
   };
 };
 
-const calcPerThaalCost = (halls = []) => {
-  if (halls.length === 0) return 0;
-  const { thaalAmount, thaals } = halls[0];
-  return thaalAmount / (thaals || 1);
-};
-
 module.exports = {
   calcBookingTotals,
   calculateThaalAmount,
-  calcPerThaalCost,
 };

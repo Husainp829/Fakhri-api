@@ -16,6 +16,7 @@ module.exports = (sq, type) => {
       deposit: type.INTEGER,
       acCharges: type.INTEGER,
       kitchenCleaning: type.INTEGER,
+      includeThaalCharges: type.BOOLEAN,
       createdAt: type.DATE,
       updatedAt: type.DATE,
     },

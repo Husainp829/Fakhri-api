@@ -32,6 +32,11 @@ module.exports = {
         default: 0,
         allowNull: false,
       },
+      includeThaalCharges: {
+        type: Sequelize.BOOLEAN,
+        default: true,
+        allowNull: false,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
