@@ -13,13 +13,18 @@ const calculateTotalAmountPending = ({
   paidAmount = 0,
   writeOffAmount = 0,
   extraExpenses = 0,
-}) => (Number(rentAmount) || 0) +
-  (Number(kitchenCleaningAmount) || 0) +
-  (Number(jamaatLagat) || 0) +
-  thaalAmount +
-  (Number(extraExpenses) || 0) -
-  (Number(paidAmount) || 0) -
-  (Number(writeOffAmount) || 0);
+}) => {
+  const total =
+    Number(rentAmount) +
+    Number(kitchenCleaningAmount) +
+    Number(jamaatLagat) +
+    Number(thaalAmount) +
+    Number(extraExpenses);
+
+  const deductions = Number(paidAmount) + Number(writeOffAmount);
+
+  return total - deductions;
+};
 
 const calcBookingTotals = ({
   halls = [],
@@ -29,6 +34,7 @@ const calcBookingTotals = ({
   paidAmount = 0,
   jamaatLagatUnit = 0,
   perThaalCost = 0,
+  mohalla = "Fakhri Mohalla",
 }) => {
   const {
     rent: rentAmount,
@@ -63,7 +69,7 @@ const calcBookingTotals = ({
   );
 
   let jamaatLagat = 0;
-  if (jamaatLagatUnit > 0 && halls.length > 0) {
+  if (jamaatLagatUnit > 0 && halls.length > 0 && mohalla === "Fakhri Mohalla") {
     jamaatLagat = jamaatLagatUnit;
   }
 

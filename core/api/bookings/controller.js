@@ -21,7 +21,7 @@ const include = [
       {
         model: models.halls,
         as: "hall",
-        attributes: ["name"],
+        attributes: ["name", "includeThaalCharges"],
       },
     ],
   },
@@ -133,6 +133,7 @@ async function insert(req, res) {
       paidAmount,
       perThaalCost: bookingPurpose.perThaal || 0,
       jamaatLagatUnit: bookingPurpose.jamaatLagat || 0,
+      mohalla,
     });
 
     const result = await sequelize.transaction(async (t) => {
@@ -343,6 +344,7 @@ async function writeOffAmount(req, res) {
       ...booking,
       perThaalCost: bookingPurpose.perThaal || 0,
       jamaatLagatUnit: bookingPurpose.jamaatLagat || 0,
+      mohalla: booking.mohalla,
     });
 
     if (totalAmountPending <= 0) {
@@ -420,6 +422,7 @@ async function settleRefund(req, res) {
       ...booking,
       perThaalCost: bookingPurpose.perThaal || 0,
       jamaatLagatUnit: bookingPurpose.jamaatLagat || 0,
+      mohalla: booking.mohalla,
     });
     if (refundAmount <= 0) {
       code = constants.HTTP_STATUS_CODES.BAD_REQUEST;
