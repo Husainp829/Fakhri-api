@@ -1,6 +1,11 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable("employeeAttendance", {
+      id: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
       userId: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -37,20 +42,26 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    // drop optional index first if present
+    // Drop optional indexes first
     await queryInterface
       .removeIndex("employeeAttendance", "idx_employeeAttendance_user_checkDate")
       .catch(() => {});
     await queryInterface
       .removeIndex("employeeAttendance", "idx_employeeAttendance_checkDate")
       .catch(() => {});
+
+    // Drop generated column
     await queryInterface.sequelize.query(`
       ALTER TABLE \`employeeAttendance\` DROP COLUMN \`checkDate\`
     `);
+
+    // Drop unique constraint
     await queryInterface.removeConstraint(
       "employeeAttendance",
       "uq_employeeAttendance_user_checkTime"
     );
+
+    // Finally drop table
     await queryInterface.dropTable("employeeAttendance");
   },
 };
