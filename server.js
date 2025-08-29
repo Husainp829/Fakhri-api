@@ -51,9 +51,9 @@ app.all("/*", (req, res, next) => {
 app.use(morgan("combined", { stream: winston.stream }));
 
 // initialize body-parser to parse incoming parameters requests to req.body
-app.use(express.text({ type: "*/*", limit: "5mb" }));
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.text({ type: "text/plain", limit: "5mb" })); // 👈 add this
 
 // initialize cookie-parser to allow us access the cookies stored in the browser.
 app.use(cookieParser());
