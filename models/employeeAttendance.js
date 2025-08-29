@@ -14,15 +14,16 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       tableName: "employeeAttendance",
-      timestamps: false, // remove if you don’t want createdAt/updatedAt
+      timestamps: false,
+      id: false,
       indexes: [
         {
           unique: true,
-          fields: ["userId", "checkTime"], // composite unique constraint
+          fields: ["userId", "checkTime"],
         },
         {
           name: "idx_checkTime_date",
-          fields: [sequelize.literal("DATE(`checkTime`)")], // index on date only
+          fields: [sequelize.literal("DATE(`checkTime`)")],
         },
       ],
     }
