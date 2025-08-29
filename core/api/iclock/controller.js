@@ -1,4 +1,5 @@
 const constants = require("../../const/constants");
+const models = require("../../../models");
 
 async function iclock(req, res) {
   try {
@@ -8,20 +9,19 @@ async function iclock(req, res) {
       const punches = lines.map((line) => {
         const parts = line.trim().split(/\s+/);
         return {
-          pin: parts[0],
-          timestamp: `${parts[1]} ${parts[2]}`,
+          userId: parseInt(parts[0], 10),
+          checkTime: new Date(`${parts[1]} ${parts[2]}`),
         };
       });
 
       console.log("Parsed ATTLOG punches:", punches);
-
-      // saveAttendance(punches).catch((err) => console.error("DB Error:", err));
+      await models.employeeAttendance.bulkCreate(punches, {
+        ignoreDuplicates: true,
+      });
     }
 
-    // Always send back a success response so the device knows data was received
     res.status(200).send("OK\n");
   } catch (error) {
-    console.error("Error in iclock handler:", error);
     res.status(500).send("ERROR");
     sendError(res, error, constants.HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
   }
