@@ -36,5 +36,7 @@ router.use("/bookings", require("../api/bookings/routes"));
 router.use("/hallBookings", require("../api/hallBookings/routes"));
 router.use("/contRcpt", require("../api/rentBookingReceipt/routes"));
 router.use("/iclock", require("../api/iclock/routes"));
+router.use("/employees", require("../api/employees/routes"));
+router.use("/employeesAttendance", require("../api/employeesAttendance/routes"));
 
 module.exports = router;
