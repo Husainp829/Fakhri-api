@@ -6,7 +6,7 @@ module.exports = {
         autoIncrement: true,
         primaryKey: true,
       },
-      userId: {
+      employeeId: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
@@ -16,9 +16,9 @@ module.exports = {
       },
     });
 
-    // Composite unique on (userId, checkTime)
+    // Composite unique on (employeeId, checkTime)
     await queryInterface.addConstraint("employeeAttendance", {
-      fields: ["userId", "checkTime"],
+      fields: ["employeeId", "checkTime"],
       type: "unique",
       name: "uq_employeeAttendance_user_checkTime",
     });
@@ -36,7 +36,7 @@ module.exports = {
     });
 
     // (Optional but useful) index for lookups by user + date
-    await queryInterface.addIndex("employeeAttendance", ["userId", "checkDate"], {
+    await queryInterface.addIndex("employeeAttendance", ["employeeId", "checkDate"], {
       name: "idx_employeeAttendance_user_checkDate",
     });
   },

@@ -9,12 +9,11 @@ async function iclock(req, res) {
       const punches = lines.map((line) => {
         const parts = line.trim().split(/\s+/);
         return {
-          userId: parseInt(parts[0], 10),
+          employeeId: parseInt(parts[0], 10),
           checkTime: new Date(`${parts[1]} ${parts[2]}`),
         };
       });
 
-      console.log("Parsed ATTLOG punches:", punches);
       await models.employeeAttendance.bulkCreate(punches, {
         ignoreDuplicates: true,
       });
@@ -22,7 +21,6 @@ async function iclock(req, res) {
 
     res.status(200).send("OK\n");
   } catch (error) {
-    console.error("Error processing iclock data:", error);
     res.status(500).send("ERROR");
     sendError(res, error, constants.HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
   }

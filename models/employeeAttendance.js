@@ -3,7 +3,7 @@ module.exports = (sequelize, DataTypes) => {
   const model = sequelize.define(
     "employeeAttendance",
     {
-      userId: {
+      employeeId: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       indexes: [
         {
           unique: true,
-          fields: ["userId", "checkTime"],
+          fields: ["employeeId", "checkTime"],
         },
         {
           name: "idx_checkTime_date",
