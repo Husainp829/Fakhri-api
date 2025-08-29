@@ -2,10 +2,21 @@ const constants = require("../../const/constants");
 
 async function iclock(req, res) {
   try {
-    // If you're using express with bodyParser.text()
-    console.log("Headers:", req.headers);
-    console.log("Query Params:", req.query);
-    console.log("Raw Body:", req.body);
+    const { table } = req.query;
+    if (table === "ATTLOG") {
+      const lines = req.body.split(/\r?\n/).filter((l) => l.trim() !== "");
+      const punches = lines.map((line) => {
+        const parts = line.trim().split(/\s+/);
+        return {
+          pin: parts[0],
+          timestamp: `${parts[1]} ${parts[2]}`,
+        };
+      });
+
+      console.log("Parsed ATTLOG punches:", punches);
+
+      // saveAttendance(punches).catch((err) => console.error("DB Error:", err));
+    }
 
     // Always send back a success response so the device knows data was received
     res.status(200).send("OK\n");
