@@ -8,9 +8,10 @@ async function iclock(req, res) {
     console.log("Raw Body:", req.body);
 
     // Always send back a success response so the device knows data was received
-    sendResponse(res, {}, constants.HTTP_STATUS_CODES.CREATED);
+    res.status(200).send("OK\n");
   } catch (error) {
     console.error("Error in iclock handler:", error);
+    res.status(500).send("ERROR");
     sendError(res, error, constants.HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
   }
 }
