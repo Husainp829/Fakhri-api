@@ -51,6 +51,7 @@ app.all("/*", (req, res, next) => {
 app.use(morgan("combined", { stream: winston.stream }));
 
 // initialize body-parser to parse incoming parameters requests to req.body
+app.use(express.text({ type: "*/*", limit: "5mb" }));
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
 
