@@ -5,6 +5,6 @@ const controller = require("./controller");
 
 const router = express.Router();
 
-router.post("/", controller.iclock);
+router.post("/iclock/cdata.aspx", controller.iclock);
 
 module.exports = router;
