@@ -16,7 +16,7 @@ const include = [
   {
     model: models.halls,
     as: "hall",
-    attributes: ["name"],
+    attributes: ["name", "shortCode"],
     required: true,
   },
 ];
