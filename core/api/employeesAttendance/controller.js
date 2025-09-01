@@ -42,17 +42,9 @@ async function getMonthAttendance(req, res) {
       // Group attendance by day
       emp.employeeAttendance.forEach((att) => {
         const day = att.checkTime.getDate();
-
-        if (type === "FMB_STAFF") {
-          // Only first check-in
-          if (!days[day]) days[day] = att.checkTime;
-        } else {
-          // Store checkIn / checkOut per day
-          // eslint-disable-next-line no-lonely-if
-          if (!days[day]) days[day] = { checkIn: att.checkTime, checkOut: att.checkTime };
-          else if (att.checkTime < days[day].checkIn) days[day].checkIn = att.checkTime;
-          else if (att.checkTime > days[day].checkOut) days[day].checkOut = att.checkTime;
-        }
+        if (!days[day]) days[day] = { checkIn: att.checkTime, checkOut: att.checkTime };
+        else if (att.checkTime < days[day].checkIn) days[day].checkIn = att.checkTime;
+        else if (att.checkTime > days[day].checkOut) days[day].checkOut = att.checkTime;
       });
 
       return {
