@@ -1,7 +1,6 @@
 const joi = require("joi");
 
 const organiser = joi.string();
-const purpose = joi.string();
 const phone = joi.string();
 const itsNo = joi.string();
 const sadarat = joi.string();
@@ -20,6 +19,7 @@ const hallBookings = joi.array().items(
     date: joi.date().required(),
     thaals: joi.number().required(),
     withAC: joi.bool().required(),
+    purpose: joi.string().required(),
   })
 );
 
@@ -35,7 +35,6 @@ const actualThaals = joi
 
 const body = {
   organiser: organiser.required(),
-  purpose: purpose.required(),
   phone: phone.required(),
   itsNo: itsNo.required(),
   hallBookings: hallBookings.required(),

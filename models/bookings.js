@@ -11,7 +11,6 @@ module.exports = (sq, type) => {
       },
       bookingNo: type.STRING,
       organiser: type.STRING,
-      purpose: type.STRING,
       phone: type.STRING,
       itsNo: type.STRING,
       paidAmount: type.INTEGER,
@@ -46,7 +45,6 @@ module.exports = (sq, type) => {
       as: "rentBookingReceipts",
     });
     model.hasOne(models.admins, { as: "admin", foreignKey: "id", sourceKey: "submitter" });
-    model.hasOne(models.bookingPurpose, { as: "bookingPurpose", foreignKey: "id", sourceKey: "purpose" });
   };
 
   return model;

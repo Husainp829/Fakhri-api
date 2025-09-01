@@ -12,10 +12,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING,
       },
-      purpose: {
-        allowNull: false,
-        type: Sequelize.STRING,
-      },
       itsNo: {
         allowNull: false,
         type: Sequelize.STRING,

@@ -3,7 +3,7 @@ const Sequelize = require("sequelize");
 const { Op } = Sequelize;
 const models = require("../../../models");
 
-function findAll(resource, query) {
+async function findAll(resource, query) {
   const {
     orderBy,
     order,
@@ -29,6 +29,12 @@ function findAll(resource, query) {
     };
   }
 
+  // --- Count query (⚡ no include) ---
+  const count = await models[resource].count({
+    where: whereCondition,
+  });
+
+  // --- Rows query (with include, pagination) ---
   const params = {
     where: whereCondition,
     attributes: attributes || { exclude: ["deletedAt"] },
@@ -44,7 +50,9 @@ function findAll(resource, query) {
     params.include = include;
   }
 
-  return models[resource].findAndCountAll(params);
+  const rows = await models[resource].findAll(params);
+
+  return { count, rows };
 }
 
 async function findById(resource, columnName = "id", id, include, attributes) {

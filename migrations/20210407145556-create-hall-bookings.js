@@ -48,6 +48,10 @@ module.exports = {
         default: 0,
         allowNull: false,
       },
+      purpose: {
+        allowNull: false,
+        type: Sequelize.STRING,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

@@ -37,6 +37,7 @@ module.exports = (sequelize, DataTypes) => {
       thaalAmount: DataTypes.INTEGER,
       acCharges: DataTypes.INTEGER,
       kitchenCleaning: DataTypes.INTEGER,
+      purpose: DataTypes.STRING,
     },
     {
       tableName: "hallBookings",
@@ -53,6 +54,11 @@ module.exports = (sequelize, DataTypes) => {
     model.belongsTo(models.halls, {
       foreignKey: "hallId",
       as: "hall",
+    });
+    model.hasOne(models.bookingPurpose, {
+      as: "bookingPurpose",
+      foreignKey: "id",
+      sourceKey: "purpose",
     });
   };
 

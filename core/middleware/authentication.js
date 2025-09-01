@@ -23,7 +23,7 @@ function authenticate(req, res, next) {
         permissions: cached.permissions,
         uid: cached.uid,
         userId: cached.userId,
-        eventId: cached.eventId,
+        eventId,
       };
       next();
       return;

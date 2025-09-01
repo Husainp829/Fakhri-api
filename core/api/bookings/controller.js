@@ -2,6 +2,7 @@
 const dayjs = require("dayjs");
 const mustache = require("mustache");
 const { keyBy } = require("lodash");
+const { Op } = require("sequelize");
 const baseRepo = require("../base/repo");
 const constants = require("../../const/constants");
 const meta = require("./meta");
@@ -23,16 +24,16 @@ const include = [
         as: "hall",
         attributes: ["name", "includeThaalCharges"],
       },
+      {
+        model: models.bookingPurpose,
+        as: "bookingPurpose",
+        attributes: ["perThaal", "jamaatLagat"],
+      },
     ],
   },
   {
     model: models.admins,
     as: "admin",
-  },
-  {
-    model: models.bookingPurpose,
-    as: "bookingPurpose",
-    required: true,
   },
 ];
 
@@ -47,6 +48,17 @@ const includeAll = [
 
 async function findAll(req, res) {
   const { query } = req;
+
+  if (query.search) {
+    query.where = {
+      [Op.or]: [
+        { itsNo: { [Op.eq]: query.search } },
+        { bookingNo: { [Op.eq]: query.search } },
+        { organiser: { [Op.like]: `%${query.search}%` } },
+      ],
+    };
+    delete query.search;
+  }
   query.include = include;
 
   baseRepo
@@ -97,7 +109,6 @@ async function insert(req, res) {
 
   const {
     organiser,
-    purpose,
     phone,
     itsNo,
     hallBookings,
@@ -115,24 +126,30 @@ async function insert(req, res) {
     }
 
     const hallIds = hallBookings.map((h) => h.hallId);
+    const purposeIds = hallBookings.map((h) => h.purpose);
     const [hallsArr, bookingPurposeData] = await Promise.all([
       baseRepo.findAll("halls", {
         filter: JSON.stringify({ id: hallIds }),
       }),
-      baseRepo.findById("bookingPurpose", "id", purpose),
+      baseRepo.findAll("bookingPurpose", {
+        filter: JSON.stringify({ id: purposeIds }),
+      }),
     ]);
 
     const halls = keyBy(hallsArr.rows, "id");
-    const bookingPurpose = bookingPurposeData.rows?.[0] || {};
+    const purposes = keyBy(bookingPurposeData.rows, "id");
 
-    const enrichedBookings = hallBookings.map((h) => ({ ...h, ...halls[h.hallId] }));
+    const enrichedBookings = hallBookings.map((h) => ({
+      ...h,
+      ...halls[h.hallId],
+      perThaal: purposes[h.purpose].perThaal || 0,
+      jamaatLagat: purposes[h.purpose].jamaatLagat || 0,
+    }));
 
     const { jamaatLagat } = calcBookingTotals({
       halls: enrichedBookings,
       depositPaidAmount,
       paidAmount,
-      perThaalCost: bookingPurpose.perThaal || 0,
-      jamaatLagatUnit: bookingPurpose.jamaatLagat || 0,
       mohalla,
     });
 
@@ -155,7 +172,7 @@ async function insert(req, res) {
         {
           bookingNo,
           organiser,
-          purpose,
+          // purpose,
           phone,
           itsNo,
           submitter: userId,
@@ -178,34 +195,13 @@ async function insert(req, res) {
       promises.push(baseRepo.updateSequence(constants.SEQUENCE_NAMES.HALL_BOOKING, t));
 
       // Hall bookings
-      const hallBookingRows = enrichedBookings.map(
-        ({
-          hallId,
-          slot,
-          date,
-          thaals,
-          rent,
-          deposit,
-          acCharges,
-          withAC,
-          kitchenCleaning,
-          includeThaalCharges,
-        }) => ({
-          bookingId,
-          hallId,
-          slot,
-          date,
-          thaals,
-          thaalAmount: includeThaalCharges
-            ? calculateThaalAmount(thaals, bookingPurpose.perThaal)
-            : 0,
-          rent,
-          deposit,
-          acCharges,
-          withAC,
-          kitchenCleaning,
-        })
-      );
+      const hallBookingRows = enrichedBookings.map(({ includeThaalCharges, ...hallProps }) => ({
+        ...hallProps,
+        bookingId,
+        thaalAmount: includeThaalCharges
+          ? calculateThaalAmount(hallProps.thaals, purposes[hallProps.purpose].perThaal)
+          : 0,
+      }));
       promises.push(models.hallBookings.bulkCreate(hallBookingRows, { transaction: t }));
 
       const receiptBase = {
@@ -336,15 +332,23 @@ async function writeOffAmount(req, res) {
       throwError("Booking does not exist", true);
     }
 
-    const bookingPurposeData = baseRepo.findById("bookingPurpose", "id", booking.purpose);
-    const bookingPurpose = bookingPurposeData.rows?.[0] || {};
+    const purposeIds = booking.hallBookings.map((b) => b.purpose);
+
+    const [bookingPurposeData] = await Promise.all([
+      baseRepo.findAll("bookingPurpose", {
+        filter: JSON.stringify({ id: purposeIds }),
+      }),
+    ]);
+
+    const purposes = keyBy(bookingPurposeData.rows, "id");
 
     const { totalAmountPending } = calcBookingTotals({
-      halls: booking.hallBookings,
+      halls: booking.hallBookings.map((b) => ({
+        ...b,
+        perThaal: purposes[b.purpose].perThaal || 0,
+        jamaatLagat: purposes[b.purpose].jamaatLagat || 0,
+      })),
       ...booking,
-      perThaalCost: bookingPurpose.perThaal || 0,
-      jamaatLagatUnit: bookingPurpose.jamaatLagat || 0,
-      mohalla: booking.mohalla,
     });
 
     if (totalAmountPending <= 0) {
@@ -414,15 +418,23 @@ async function settleRefund(req, res) {
       throwError("Booking does not exist", true);
     }
 
-    const bookingPurposeData = baseRepo.findById("bookingPurpose", "id", booking.purpose);
-    const bookingPurpose = bookingPurposeData.rows?.[0] || {};
+    const purposeIds = booking.hallBookings.map((b) => b.purpose);
+
+    const [bookingPurposeData] = await Promise.all([
+      baseRepo.findAll("bookingPurpose", {
+        filter: JSON.stringify({ id: purposeIds }),
+      }),
+    ]);
+
+    const purposes = keyBy(bookingPurposeData.rows, "id");
 
     const { refundAmount } = calcBookingTotals({
-      halls: booking.hallBookings,
+      halls: booking.hallBookings.map((b) => ({
+        ...b,
+        perThaal: purposes[b.purpose].perThaal || 0,
+        jamaatLagat: purposes[b.purpose].jamaatLagat || 0,
+      })),
       ...booking,
-      perThaalCost: bookingPurpose.perThaal || 0,
-      jamaatLagatUnit: bookingPurpose.jamaatLagat || 0,
-      mohalla: booking.mohalla,
     });
     if (refundAmount <= 0) {
       code = constants.HTTP_STATUS_CODES.BAD_REQUEST;
