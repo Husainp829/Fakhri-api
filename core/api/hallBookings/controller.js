@@ -74,25 +74,20 @@ async function findById(req, res) {
 
 async function insert(req, res) {
   const { body } = req;
-  const { bookingId, hallId, date, slot, thaals, withAC } = body;
+  const { bookingId, hallId, date, slot, thaals, withAC, purpose } = body;
 
   try {
-    if (!bookingId || !hallId || !date || !slot) {
-      throw new Error("bookingId, hallId, date, and slot are required.");
+    if (!bookingId || !hallId || !date || !slot || !purpose) {
+      throw new Error("bookingId, hallId, date, purpose and slot are required.");
     }
 
-    const [bookings, hallsArr] = await Promise.all([
-      baseRepo.findById("bookings", "id", bookingId, {
-        model: models.bookingPurpose,
-        as: "bookingPurpose",
-        required: true,
-      }),
+    const [purposeArr, hallsArr] = await Promise.all([
+      baseRepo.findById("bookingPurpose", "id", purpose),
       baseRepo.findById("halls", "id", hallId, null),
     ]);
 
     const hall = hallsArr.rows?.[0] || {};
-    const booking = bookings.rows?.[0] || {};
-    const { bookingPurpose } = booking;
+    const bookingPurpose = purposeArr.rows?.[0] || {};
 
     const result = await baseRepo.insert(ep, {
       bookingId,
@@ -106,6 +101,7 @@ async function insert(req, res) {
       deposit: hall.deposit || 0,
       acCharges: hall.acCharges || 0,
       kitchenCleaning: hall.kitchenCleaning || 0,
+      purpose,
     });
 
     sendResponse(res, result, constants.HTTP_STATUS_CODES.CREATED);
@@ -129,9 +125,13 @@ async function insert(req, res) {
 async function update(req, res) {
   let code;
   const { body } = req;
-  const { bookingId, hallId, date, slot, thaals, withAC } = body;
+  const { bookingId, hallId, date, slot, thaals, withAC, purpose } = body;
 
   try {
+    const [purposeArr] = await Promise.all([baseRepo.findById("bookingPurpose", "id", purpose)]);
+
+    const bookingPurpose = purposeArr.rows?.[0] || {};
+
     const response = await baseRepo.update(ep, req.params.id, {
       bookingId,
       hallId,
@@ -139,6 +139,8 @@ async function update(req, res) {
       slot,
       thaals,
       withAC,
+      thaalAmount: calculateThaalAmount(thaals, bookingPurpose?.perThaal),
+      purpose,
     });
 
     if (response && response.count > 0) {
