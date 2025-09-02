@@ -10,7 +10,7 @@ const include = [
   {
     model: models.bookings,
     as: "booking",
-    attributes: ["bookingNo", "purpose", "mohalla", "organiser", "itsNo", "sadarat", "phone"],
+    attributes: ["bookingNo", "mohalla", "organiser", "itsNo", "sadarat", "phone"],
     required: true,
   },
   {
