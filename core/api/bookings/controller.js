@@ -13,7 +13,12 @@ const {
   calcBookingTotals,
 } = require("../../utils/bookingCalculations");
 const { bookingCreationTemplate } = require("../../utils/messageTemplates");
-const { sendWhatsAppMessage } = require("../../service/whatsapp-meta");
+const {
+  sendWhatsAppMessage,
+  // sendBookingConfirmation,
+  // sendHallContributionConfirmation,
+  sendHallDepositConfirmation,
+} = require("../../service/whatsapp-meta");
 
 const ep = meta.ENDPOINT;
 const include = [
@@ -525,6 +530,69 @@ async function settleRefund(req, res) {
   }
 }
 
+async function testWhatsAppMessage(req, res) {
+  try {
+    const { phone } = req.body;
+
+    if (!phone) {
+      sendError(
+        res,
+        "Phone number is required",
+        constants.HTTP_STATUS_CODES.BAD_REQUEST
+      );
+    }
+
+    // Validate phone number format (basic E.164 format check)
+    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phone)) {
+      sendError(
+        res,
+        "Phone number must be in E.164 format (e.g., +1234567890)",
+        constants.HTTP_STATUS_CODES.BAD_REQUEST
+      );
+    }
+
+    // const result = await sendWhatsAppMessage({ phone, message });
+    // const result = await sendBookingConfirmation({
+    //   phone,
+    //   organiserName: "Mufaddal",
+    //   hallName: "Burhani Hall",
+    //   bookingDate: "11 Sep 2025",
+    //   slot: "Evening",
+    //   bookingNumber: "B10023",
+    // });
+    // const result = await sendHallContributionConfirmation({
+    //   phone,
+    //   bookingNumber: "B10023",
+    //   contributionDate: "11 Sep 2025",
+    //   amount: "1,000",
+    //   receiptNumber: "R10023",
+    //   receiptUrl: "cont-rcpt?id=0f26cc1a-af46-41ae-a6bc-9b228db1b945",
+    // });
+    const result = await sendHallDepositConfirmation({
+      phone,
+      bookingNumber: "B10023",
+      depositDate: "11 Sep 2025",
+      amount: "1,000",
+      receiptNumber: "R10023",
+      receiptUrl: "dep-rcpt?id=d9695ce5-7170-44b7-a43b-d238ee213e16",
+    });
+
+    sendResponse(res, {
+      success: true,
+      message: "WhatsApp message sent successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Failed to send WhatsApp notification:", error.message);
+    sendError(
+      res,
+      `Failed to send WhatsApp message: ${error.message}`,
+      constants.HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR
+    );
+  }
+}
+
 module.exports = {
   findAll,
   findById,
@@ -535,4 +603,5 @@ module.exports = {
   writeOffAmount,
   closeBooking,
   settleRefund,
+  testWhatsAppMessage,
 };
