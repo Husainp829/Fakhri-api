@@ -21,4 +21,9 @@ router.put("/:id/close", authenticate, reqValidator(schema.closeBooking), contro
 router.put("/:id/settle-refund", authenticate, controller.settleRefund);
 router.put("/:id", authenticate, reqValidator(schema.update), controller.update);
 router.delete("/:id", authenticate, controller.remove);
+router.post(
+  "/test-whatsapp",
+  // authenticate,
+  controller.testWhatsAppMessage
+);
 module.exports = router;
