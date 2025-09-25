@@ -20,7 +20,13 @@ module.exports = (sq, type) => {
       freezeTableName: true,
     }
   );
-  model.associate = () => {};
+  model.associate = (models) => {
+    model.hasMany(models.purposeHallCharges, {
+      foreignKey: "purposeId",
+      sourceKey: "id",
+      as: "hallCharges", // this alias is important for include
+    });
+  };
 
   return model;
 };

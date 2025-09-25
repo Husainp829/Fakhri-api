@@ -1,9 +1,24 @@
 const baseRepo = require("../base/repo");
 const constants = require("../../const/constants");
 const meta = require("./meta");
+const models = require("../../../models");
 
 const ep = meta.ENDPOINT;
-const include = [];
+const include = [
+  {
+    model: models.purposeHallCharges,
+    as: "hallCharges",
+    attributes: [
+      "hallId",
+      "rent",
+      "deposit",
+      "acCharges",
+      "kitchenCleaning",
+      "includeThaalCharges",
+    ],
+    required: true,
+  },
+];
 
 async function findAll(req, res) {
   const { query } = req;

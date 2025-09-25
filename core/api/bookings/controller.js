@@ -8,10 +8,7 @@ const constants = require("../../const/constants");
 const meta = require("./meta");
 const { sequelize } = require("../../../models");
 const models = require("../../../models");
-const {
-  calculateThaalAmount,
-  calcBookingTotals,
-} = require("../../utils/bookingCalculations");
+const { calculateThaalAmount, calcBookingTotals } = require("../../utils/bookingCalculations");
 const { bookingCreationTemplate } = require("../../utils/messageTemplates");
 const {
   sendWhatsAppMessage,
@@ -93,6 +90,7 @@ async function findById(req, res) {
 }
 
 async function sendCreateMessage(booking, halls) {
+  const rentReceipt = booking.rentBookingReceipts?.[0];
   const messageData = {
     organiser: booking.organiser,
     hallBookings: halls.map((b) => ({
@@ -100,10 +98,8 @@ async function sendCreateMessage(booking, halls) {
       formattedDate: dayjs(b.date).format("D MMM YYYY"),
       slot: b.slot,
     })),
-    rentReceipt: booking.rentBookingReceipts?.[0]
-      ? {
-          url: `${constants.UI_URL}/#/cont-rcpt/${booking.rentBookingReceipts[0].id}`,
-        }
+    rentReceipt: rentReceipt
+      ? { url: `${constants.UI_URL}/#/cont-rcpt/${rentReceipt.id}` }
       : undefined,
   };
 
@@ -135,26 +131,24 @@ async function insert(req, res) {
       throw new Error("hallBookings must be a non-empty array.");
     }
 
-    const hallIds = hallBookings.map((h) => h.hallId);
     const purposeIds = hallBookings.map((h) => h.purpose);
-    const [hallsArr, bookingPurposeData] = await Promise.all([
-      baseRepo.findAll("halls", {
-        filter: JSON.stringify({ id: hallIds }),
-      }),
+    const [bookingPurposeData] = await Promise.all([
       baseRepo.findAll("bookingPurpose", {
         filter: JSON.stringify({ id: purposeIds }),
       }),
     ]);
 
-    const halls = keyBy(hallsArr.rows, "id");
     const purposes = keyBy(bookingPurposeData.rows, "id");
 
-    const enrichedBookings = hallBookings.map((h) => ({
-      ...h,
-      ...halls[h.hallId],
-      perThaal: purposes[h.purpose].perThaal || 0,
-      jamaatLagat: purposes[h.purpose].jamaatLagat || 0,
-    }));
+    const enrichedBookings = hallBookings.map((h) => {
+      const hallObj = purposes[h.purpose].hallCharges?.find((hc) => hc.hallId === h.hallId) || {};
+      return {
+        ...h,
+        ...hallObj,
+        perThaal: purposes[h.purpose].perThaal || 0,
+        jamaatLagat: purposes[h.purpose].jamaatLagat || 0,
+      };
+    });
 
     const { jamaatLagat } = calcBookingTotals({
       halls: enrichedBookings,
@@ -167,14 +161,10 @@ async function insert(req, res) {
       const [hallSeq, rentReceiptSeq, depositReceiptSeq] = await Promise.all([
         baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.HALL_BOOKING),
         paidAmount > 0
-          ? baseRepo.getCurrentSequence(
-              constants.SEQUENCE_NAMES.RENT_BOOKING_RECEIPT
-            )
+          ? baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.RENT_BOOKING_RECEIPT)
           : Promise.resolve(null),
         depositPaidAmount > 0
-          ? baseRepo.getCurrentSequence(
-              constants.SEQUENCE_NAMES.DEPOSIT_BOOKING_RECEIPT
-            )
+          ? baseRepo.getCurrentSequence(constants.SEQUENCE_NAMES.DEPOSIT_BOOKING_RECEIPT)
           : Promise.resolve(null),
       ]);
 
@@ -206,26 +196,17 @@ async function insert(req, res) {
       const promises = [];
 
       // Hall booking sequence update
-      promises.push(
-        baseRepo.updateSequence(constants.SEQUENCE_NAMES.HALL_BOOKING, t)
-      );
+      promises.push(baseRepo.updateSequence(constants.SEQUENCE_NAMES.HALL_BOOKING, t));
 
       // Hall bookings
-      const hallBookingRows = enrichedBookings.map(
-        ({ includeThaalCharges, ...hallProps }) => ({
-          ...hallProps,
-          bookingId,
-          thaalAmount: includeThaalCharges
-            ? calculateThaalAmount(
-                hallProps.thaals,
-                purposes[hallProps.purpose].perThaal
-              )
-            : 0,
-        })
-      );
-      promises.push(
-        models.hallBookings.bulkCreate(hallBookingRows, { transaction: t })
-      );
+      const hallBookingRows = enrichedBookings.map(({ includeThaalCharges, ...hallProps }) => ({
+        ...hallProps,
+        bookingId,
+        thaalAmount: includeThaalCharges
+          ? calculateThaalAmount(hallProps.thaals, purposes[hallProps.purpose].perThaal)
+          : 0,
+      }));
+      promises.push(models.hallBookings.bulkCreate(hallBookingRows, { transaction: t }));
 
       const receiptBase = {
         bookingId,
@@ -238,9 +219,7 @@ async function insert(req, res) {
 
       // Rent receipt
       if (paidAmount > 0 && rentReceiptSeq) {
-        const receiptNo = `${rentReceiptSeq.prefix}-${
-          rentReceiptSeq.currentValue + 1
-        }`;
+        const receiptNo = `${rentReceiptSeq.prefix}-${rentReceiptSeq.currentValue + 1}`;
         promises.push(
           baseRepo.insert(
             "rentBookingReceipts",
@@ -254,18 +233,13 @@ async function insert(req, res) {
             },
             t
           ),
-          baseRepo.updateSequence(
-            constants.SEQUENCE_NAMES.RENT_BOOKING_RECEIPT,
-            t
-          )
+          baseRepo.updateSequence(constants.SEQUENCE_NAMES.RENT_BOOKING_RECEIPT, t)
         );
       }
 
       // Deposit receipt
       if (depositPaidAmount > 0 && depositReceiptSeq) {
-        const receiptNo = `${depositReceiptSeq.prefix}-${
-          depositReceiptSeq.currentValue + 1
-        }`;
+        const receiptNo = `${depositReceiptSeq.prefix}-${depositReceiptSeq.currentValue + 1}`;
         promises.push(
           baseRepo.insert(
             "rentBookingReceipts",
@@ -278,10 +252,7 @@ async function insert(req, res) {
             },
             t
           ),
-          baseRepo.updateSequence(
-            constants.SEQUENCE_NAMES.DEPOSIT_BOOKING_RECEIPT,
-            t
-          )
+          baseRepo.updateSequence(constants.SEQUENCE_NAMES.DEPOSIT_BOOKING_RECEIPT, t)
         );
       }
 
@@ -291,11 +262,7 @@ async function insert(req, res) {
       return bookingId;
     });
 
-    sendResponse(
-      res,
-      { count: 1, rows: [{ id: result }] },
-      constants.HTTP_STATUS_CODES.CREATED
-    );
+    sendResponse(res, { count: 1, rows: [{ id: result }] }, constants.HTTP_STATUS_CODES.CREATED);
     // Async WhatsApp notification (non-blocking)
     if (phone) {
       const bookings = await baseRepo.findById(ep, "id", result, includeAll);
@@ -344,11 +311,7 @@ async function remove(req, res) {
   try {
     const count = await baseRepo.remove(ep, id);
     if (count > 0) {
-      sendResponse(
-        res,
-        { count, rows: [{ id }] },
-        constants.HTTP_STATUS_CODES.OK
-      );
+      sendResponse(res, { count, rows: [{ id }] }, constants.HTTP_STATUS_CODES.OK);
     } else {
       code = constants.HTTP_STATUS_CODES.BAD_REQUEST;
       throwError("Does not exist", true);
@@ -379,12 +342,7 @@ async function grantRaza(req, res) {
 async function writeOffAmount(req, res) {
   let code;
   try {
-    const bookings = await baseRepo.findById(
-      ep,
-      "id",
-      req.params.id,
-      includeAll
-    );
+    const bookings = await baseRepo.findById(ep, "id", req.params.id, includeAll);
 
     const booking = bookings.rows?.[0] || {};
 
@@ -440,10 +398,7 @@ async function closeBooking(req, res) {
       const promises = [];
       Object.entries(actualThaals).forEach(([hallId, count]) => {
         if (count > 0) {
-          promises.push(
-            baseRepo.update("hallBookings", hallId, { thaals: count }),
-            t
-          );
+          promises.push(baseRepo.update("hallBookings", hallId, { thaals: count }), t);
         }
       });
 
@@ -464,11 +419,7 @@ async function closeBooking(req, res) {
       return true;
     });
 
-    sendResponse(
-      res,
-      [{ id: req.params.id }],
-      constants.HTTP_STATUS_CODES.CREATED
-    );
+    sendResponse(res, [{ id: req.params.id }], constants.HTTP_STATUS_CODES.CREATED);
   } catch (err) {
     sendError(res, err, code);
   }
@@ -477,12 +428,7 @@ async function closeBooking(req, res) {
 async function settleRefund(req, res) {
   let code;
   try {
-    const bookings = await baseRepo.findById(
-      ep,
-      "id",
-      req.params.id,
-      includeAll
-    );
+    const bookings = await baseRepo.findById(ep, "id", req.params.id, includeAll);
 
     const booking = bookings.rows?.[0] || {};
 
@@ -535,11 +481,7 @@ async function testWhatsAppMessage(req, res) {
     const { phone } = req.body;
 
     if (!phone) {
-      sendError(
-        res,
-        "Phone number is required",
-        constants.HTTP_STATUS_CODES.BAD_REQUEST
-      );
+      sendError(res, "Phone number is required", constants.HTTP_STATUS_CODES.BAD_REQUEST);
     }
 
     // Validate phone number format (basic E.164 format check)
