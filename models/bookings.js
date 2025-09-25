@@ -26,6 +26,7 @@ module.exports = (sq, type) => {
       comments: type.STRING,
       checkedOutOn: type.DATE,
       refundReturnedOn: type.DATE,
+      memberReference: type.STRING,
       createdAt: type.DATE,
       updatedAt: type.DATE,
     },

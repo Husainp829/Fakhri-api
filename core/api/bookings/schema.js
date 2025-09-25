@@ -11,6 +11,7 @@ const extraExpenses = joi.number();
 const writeOffAmount = joi.number();
 const mode = joi.string();
 const ref = joi.string();
+const memberReference = joi.string();
 
 const hallBookings = joi.array().items(
   joi.object({
@@ -44,6 +45,7 @@ const body = {
   paidAmount,
   mode,
   ref,
+  memberReference,
 };
 
 const closeBooking = joi.object({

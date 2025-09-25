@@ -29,6 +29,7 @@ module.exports = {
       comments: { type: Sequelize.STRING, default: false, allowNull: false },
       checkedOutOn: { type: Sequelize.DATE },
       refundReturnedOn: { type: Sequelize.DATE },
+      memberReference: { type: Sequelize.STRING },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
