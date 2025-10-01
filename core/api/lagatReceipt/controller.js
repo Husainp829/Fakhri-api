@@ -1,34 +1,23 @@
+const { Op } = require("sequelize");
 const { sequelize } = require("../../../models");
 const baseRepo = require("../base/repo");
 const constants = require("../../const/constants");
-const models = require("../../../models");
 const meta = require("./meta");
 
 const ep = meta.ENDPOINT;
-const include = [];
-const itsdata = "itsdata";
-const includeParams = [
-  {
-    model: models.itsdata,
-    as: itsdata,
-    attributes: [
-      "id",
-      "ITS_ID",
-      "Full_Name_Arabic",
-      "Full_Name",
-      "Address",
-      "City",
-      "State",
-      "Pincode",
-    ],
-  },
-];
 
 const RECEIPT_LAGAT = "RECEIPT_LAGAT";
 
 async function findAll(req, res) {
   const { query } = req;
-  query.include = include;
+  if (query.timePeriod) {
+    const { from, to } = constants.TIME_PERIODS[query.timePeriod];
+    query.where = {
+      ...query.where,
+      receiptDate: { [Op.between]: [from, to] },
+    };
+    delete query.timePeriod;
+  }
   baseRepo
     .findAll(ep, query)
     .then((response) => {
@@ -40,7 +29,7 @@ async function findAll(req, res) {
 async function findById(req, res) {
   let code;
   try {
-    const data = await baseRepo.findById(ep, "id", req.params.id, includeParams);
+    const data = await baseRepo.findById(ep, "id", req.params.id);
     if (data.count) {
       sendResponse(res, data, constants.HTTP_STATUS_CODES.OK);
     } else {
@@ -55,7 +44,7 @@ async function findById(req, res) {
 async function insert(req, res) {
   const { body, decoded } = req;
   const { userId } = decoded;
-  const { purpose, receiptDate, amount, remarks, paymentMode } = body;
+  const { purpose, amount, remarks, paymentMode, paymentRef, itsNo, name } = body;
   const { currentValue, prefix } = (await baseRepo.getCurrentSequence(RECEIPT_LAGAT)) || {};
   try {
     const result = await sequelize.transaction(async (t) => {
@@ -64,12 +53,15 @@ async function insert(req, res) {
       const receiptData = await baseRepo.insert(
         ep,
         {
+          itsNo,
+          name,
           purpose,
-          receiptDate,
+          receiptDate: new Date(),
           receiptType: "DEBIT",
           remarks,
           amount,
           paymentMode,
+          paymentRef,
           receiptNo,
           updatedBy: userId,
         },

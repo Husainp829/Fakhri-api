@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const baseRepo = require("../base/repo");
 const constants = require("../../const/constants");
 const { sequelize } = require("../../../models");
@@ -20,6 +21,14 @@ const include = [
 async function findAll(req, res) {
   const { query } = req;
   query.include = include;
+  if (query.timePeriod) {
+    const { from, to } = constants.TIME_PERIODS[query.timePeriod];
+    query.where = {
+      ...query.where,
+      date: { [Op.between]: [from, to] },
+    };
+    delete query.timePeriod;
+  }
   baseRepo
     .findAll(ep, query)
     .then((response) => {

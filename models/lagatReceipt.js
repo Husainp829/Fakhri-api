@@ -1,6 +1,6 @@
 module.exports = (sq, type) => {
   const model = sq.define(
-    "lagatReceipt",
+    "lagatReceipts",
     {
       id: {
         type: type.UUID,
@@ -10,6 +10,8 @@ module.exports = (sq, type) => {
         autoIncrement: false,
       },
       itsNo: type.STRING,
+      referenceId: type.UUID,
+      name: type.STRING,
       purpose: type.STRING,
       receiptNo: type.STRING,
       amount: type.INTEGER,
@@ -18,6 +20,7 @@ module.exports = (sq, type) => {
       paymentMode: type.STRING,
       updatedBy: type.STRING,
       remarks: type.STRING,
+      paymentRef: type.STRING,
       deletedOn: type.DATE,
       createdAt: type.DATE,
       updatedAt: type.DATE,

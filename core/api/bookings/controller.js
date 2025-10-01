@@ -146,15 +146,7 @@ async function insert(req, res) {
         ...h,
         ...hallObj,
         perThaal: purposes[h.purpose].perThaal || 0,
-        jamaatLagat: purposes[h.purpose].jamaatLagat || 0,
       };
-    });
-
-    const { jamaatLagat } = calcBookingTotals({
-      halls: enrichedBookings,
-      depositPaidAmount,
-      paidAmount,
-      mohalla,
     });
 
     const result = await sequelize.transaction(async (t) => {
@@ -184,7 +176,7 @@ async function insert(req, res) {
           mohalla,
           depositPaidAmount,
           paidAmount,
-          jamaatLagat,
+          jamaatLagat: 0,
         },
         t
       );
@@ -365,7 +357,6 @@ async function writeOffAmount(req, res) {
       halls: booking.hallBookings.map((b) => ({
         ...b,
         perThaal: purposes[b.purpose].perThaal || 0,
-        jamaatLagat: purposes[b.purpose].jamaatLagat || 0,
       })),
       ...booking,
     });
@@ -451,7 +442,6 @@ async function settleRefund(req, res) {
       halls: booking.hallBookings.map((b) => ({
         ...b,
         perThaal: purposes[b.purpose].perThaal || 0,
-        jamaatLagat: purposes[b.purpose].jamaatLagat || 0,
       })),
       ...booking,
     });
