@@ -1,4 +1,8 @@
+/* eslint-disable newline-per-chained-call */
 const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+
+dayjs.extend(utc);
 
 module.exports = {
   FORMATS: {
@@ -67,54 +71,54 @@ module.exports = {
 
   TIME_PERIODS: {
     TODAY: {
-      from: dayjs().startOf("day").toDate(),
-      to: dayjs().endOf("day").toDate(),
+      from: dayjs.utc().startOf("day").toDate(),
+      to: dayjs.utc().endOf("day").toDate(),
     },
     YESTERDAY: {
-      from: dayjs().subtract(1, "day").startOf("day").toDate(),
-      to: dayjs().subtract(1, "day").endOf("day").toDate(),
+      from: dayjs.utc().subtract(1, "day").startOf("day").toDate(),
+      to: dayjs.utc().subtract(1, "day").endOf("day").toDate(),
     },
     WEEK_TO_DATE: {
-      from: dayjs().startOf("week").toDate(),
-      to: dayjs().endOf("day").toDate(),
+      from: dayjs.utc().startOf("week").toDate(),
+      to: dayjs.utc().endOf("day").toDate(),
     },
     MONTH_TO_DATE: {
-      from: dayjs().startOf("month").toDate(),
-      to: dayjs().endOf("day").toDate(),
+      from: dayjs.utc().startOf("month").toDate(),
+      to: dayjs.utc().endOf("day").toDate(),
     },
     YEAR_TO_DATE: {
-      from: dayjs().startOf("year").toDate(),
-      to: dayjs().endOf("day").toDate(),
+      from: dayjs.utc().startOf("year").toDate(),
+      to: dayjs.utc().endOf("day").toDate(),
     },
     LAST_7_DAYS: {
-      from: dayjs().subtract(7, "day").startOf("day").toDate(),
-      to: dayjs().endOf("day").toDate(),
+      from: dayjs.utc().subtract(7, "day").startOf("day").toDate(),
+      to: dayjs.utc().endOf("day").toDate(),
     },
     LAST_30_DAYS: {
-      from: dayjs().subtract(30, "day").startOf("day").toDate(),
-      to: dayjs().endOf("day").toDate(),
+      from: dayjs.utc().subtract(30, "day").startOf("day").toDate(),
+      to: dayjs.utc().endOf("day").toDate(),
     },
     LAST_90_DAYS: {
-      from: dayjs().subtract(90, "day").startOf("day").toDate(),
-      to: dayjs().endOf("day").toDate(),
+      from: dayjs.utc().subtract(90, "day").startOf("day").toDate(),
+      to: dayjs.utc().endOf("day").toDate(),
     },
     LAST_180_DAYS: {
-      from: dayjs().subtract(180, "day").startOf("day").toDate(),
-      to: dayjs().endOf("day").toDate(),
+      from: dayjs.utc().subtract(180, "day").startOf("day").toDate(),
+      to: dayjs.utc().endOf("day").toDate(),
     },
     LAST_365_DAYS: {
-      from: dayjs().subtract(365, "day").startOf("day").toDate(),
-      to: dayjs().endOf("day").toDate(),
+      from: dayjs.utc().subtract(365, "day").startOf("day").toDate(),
+      to: dayjs.utc().endOf("day").toDate(),
     },
     CURRENT_FINANCIAL_YEAR: {
       from:
-        dayjs().month() >= 3
-          ? dayjs().month(3).startOf("month").toDate()
-          : dayjs().month(3).subtract(1, "year").startOf("month").toDate(),
+        dayjs.utc().month() >= 3
+          ? dayjs.utc().month(3).startOf("month").toDate()
+          : dayjs.utc().month(3).subtract(1, "year").startOf("month").toDate(),
       to:
-        dayjs().month() >= 3
-          ? dayjs().month(2).add(1, "year").endOf("month").toDate()
-          : dayjs().month(2).endOf("month").toDate(),
+        dayjs.utc().month() >= 3
+          ? dayjs.utc().month(2).add(1, "year").endOf("month").toDate()
+          : dayjs.utc().month(2).endOf("month").toDate(),
     },
   },
 };

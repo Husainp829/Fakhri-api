@@ -6,6 +6,8 @@ const express = require("express");
 const morgan = require("morgan");
 const firebase = require("firebase-admin");
 const { default: rateLimit } = require("express-rate-limit");
+const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
 
 const serviceAccount = require("./fcmkey.json");
 const winston = require("./core/const/winston");
@@ -14,6 +16,8 @@ const constants = require("./core/const/constants");
 firebase.initializeApp({
   credential: firebase.credential.cert(serviceAccount),
 });
+
+dayjs.extend(utc);
 
 const app = express();
 
